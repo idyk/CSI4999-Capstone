@@ -176,8 +176,8 @@ def nonadmin_ticket_view_more_info():
         "SELECT Status from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
 
     ui.label("Time Created: " + ticketTimestamp.at[0, "Timestamp"])
-    ui.label("Ticket Title: " + ticketAssignee.at[0, "Assignee"])
-    ui.label("Ticket Staus: " + ticketStatus.at[0, "Status"])
+    ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"])
+    ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
 
 
 login_page()
