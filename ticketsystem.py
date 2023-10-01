@@ -207,8 +207,6 @@ def nonadmin_ticket_view_info():
 
 
 # This shows more information that isn't really needed to know for the user, but they may want to see it still.
-
-
 @ui.page("/nonadmin_ticket_view_more_info")
 def nonadmin_ticket_view_more_info():
     ui.button("Go back", on_click=lambda: ui.open(nonadmin_ticket_view_info))
@@ -230,7 +228,7 @@ def nonadmin_ticket_view_more_info():
     ui.label("Ticket Staus: " + ticketStatus.at[0, "Status"])
 
 
-# ADMIN VIEW SECTION
+# ADMIN VIEW SECTION!!!!!!!!!
 
 @ui.page('/admin_page')
 def admin_page():
@@ -274,14 +272,11 @@ def admin_ticket_view_info():
     global queriedTicketNumber
 
     print("Showing Ticket " + str(queriedTicketNumber.value) + ".")
-    ui.button("Go back", on_click=lambda: ui.open(admin_ticket_view_list))
 
     ticketNumber = queriedTicketNumber.value
 
     elevatedUserGet = pd.read_sql_query(
         "SELECT Username FROM Logins WHERE Elevated = 'True'", db_login)
-
-    print("elevated length: " + str(len(elevatedUserGet)))
 
     ticketTitle = pd.read_sql_query(
         "SELECT Title from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
@@ -307,38 +302,55 @@ def admin_ticket_view_info():
     ticketHistoryTimestamp = pd.read_sql_query(
         "SELECT Timestamp FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
 
-    ui.label("Ticket #" + str(ticketNumber))
-    ui.label("Ticket Title: " + ticketTitle.at[0, "Title"])
-    ui.label("Ticket Description: " + ticketDesc.at[0, "Description"])
-    ui.label("Time Created: " + ticketTimestamp.at[0, "Timestamp"])
-    ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"])
-    ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
+    ui.query('.nicegui-content').style('display: inline; padding: 0px')
+    ui.button("Go back", on_click=lambda: ui.open(admin_ticket_view_list))
+
+    with ui.row().classes('border-4 border-indigo-600 justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
+        ui.label("Ticket #" + str(ticketNumber))
+        ui.label("Ticket Title: " + ticketTitle.at[0, "Title"])
+        ui.label("Last Updated: " + ticketTimestamp.at[0, "Timestamp"])
+        ui.label("Ticket User: " + ticketUsername.at[0, "User"])
+        ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"])
+        ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
+
+    with ui.column().classes('border-4 border-indigo-600 justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
+        ui.label("Current Ticket Description: ")
+        ui.label(ticketDesc.at[0, "Description"])
 
     # Ticket History
+    ui.label("History of Ticket").style(
+        'color: red; font-weight: bold; text-align: center')
+
     for i in range(0, len(ticketHistoryDesc), 1):
         ui.label("Ticket Description at " +
-                 ticketHistoryTimestamp.at[i, "Timestamp"])
-        ui.label(ticketHistoryDesc.at[i, "Description"])
+                 ticketHistoryTimestamp.at[i, "Timestamp"]).style('text-align: center; padding: 20px')
+        ui.label(ticketHistoryDesc.at[i, "Description"]).style(
+            'text-align: center; padding: 20px')
 
     arrayOfAssignees = []
     for i in range(0, len(elevatedUserGet), 1):
         arrayOfAssignees.append(
             elevatedUserGet.at[i, 'Username'])
 
+    ui.label("Modify Ticket").style(
+        'color: red; font-weight: bold; text-align: center')
+
     # Default to first possible assignee in case of anything...
     selectedAssignee = arrayOfAssignees[0]
-    selectedAssignee = ui.select(options=arrayOfAssignees, value=arrayOfAssignees[0],
-                                 on_change=lambda: print("user selected"))
-
     arrayOfStatuses = ["Open", "Resolved", "On Hold"]
     selectedStatus = arrayOfStatuses[0]
-    selectedStatus = ui.select(options=arrayOfStatuses, value=arrayOfStatuses[0],
-                               on_change=lambda: print("status selected"))
 
-    ticketTitle = ui.textarea("Update title.")
-    # ui.label("Issue:")
-    ticketDesc = ui.textarea("Update description.")
-    ui.button("Submit", on_click=lambda: updateTicket())
+    with ui.column().classes('border-4 border-indigo-600 justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
+        ui.label("Update Assignee")
+        selectedAssignee = ui.select(options=arrayOfAssignees, value=arrayOfAssignees[0],
+                                     on_change=lambda: print("user selected")).classes('w-max')
+        ui.label("Update Status")
+        selectedStatus = ui.select(options=arrayOfStatuses, value=arrayOfStatuses[0],
+                                   on_change=lambda: print("status selected")).classes('w-max')
+        ticketTitle = ui.textarea("Update title.").classes('w-full')
+        ticketDesc = ui.textarea("Update description.").classes('w-full')
+        ui.button("Submit", on_click=lambda: updateTicket()
+                  ).classes('w-6/12')
 
     def updateTicket():
         global username
