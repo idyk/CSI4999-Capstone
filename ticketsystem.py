@@ -149,16 +149,27 @@ def nonadmin_ticket_view_info():
     ticketAssignee = pd.read_sql_query(
         "SELECT Assignee from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
 
+    ticketHistoryDesc = pd.read_sql_query(
+        "SELECT Description FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
+
+    ticketHistoryTimestamp = pd.read_sql_query(
+        "SELECT Timestamp FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
+
     ui.label("Ticket #" + str(ticketNumber))
     ui.label("Ticket Title: " + ticketTitle.at[0, "Title"])
     ui.label("Ticket Description: " + ticketDesc.at[0, "Description"])
+
+    # Ticket History
+    for i in range(0, len(ticketHistoryDesc), 1):
+        ui.label("Ticket Description at " +
+                 ticketHistoryTimestamp.at[i, "Timestamp"])
+        ui.label(ticketHistoryDesc.at[i, "Description"])
 
     ui.button("View further information", on_click=lambda: ui.open(
         nonadmin_ticket_view_more_info))
 
     ui.label("If you'd like to make changes to your ticket, feel free to do so.")
     ticketTitle = ui.textarea("Update title.")
-    # ui.label("Issue:")
     ticketDesc = ui.textarea("Update description.")
     ui.button("Submit", on_click=lambda: updateTicket())
 
@@ -290,12 +301,24 @@ def admin_ticket_view_info():
     ticketUsername = pd.read_sql_query(
         "SELECT User from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
 
+    ticketHistoryDesc = pd.read_sql_query(
+        "SELECT Description FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
+
+    ticketHistoryTimestamp = pd.read_sql_query(
+        "SELECT Timestamp FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
+
     ui.label("Ticket #" + str(ticketNumber))
     ui.label("Ticket Title: " + ticketTitle.at[0, "Title"])
     ui.label("Ticket Description: " + ticketDesc.at[0, "Description"])
     ui.label("Time Created: " + ticketTimestamp.at[0, "Timestamp"])
     ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"])
-    ui.label("Ticket Staus: " + ticketStatus.at[0, "Status"])
+    ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
+
+    # Ticket History
+    for i in range(0, len(ticketHistoryDesc), 1):
+        ui.label("Ticket Description at " +
+                 ticketHistoryTimestamp.at[i, "Timestamp"])
+        ui.label(ticketHistoryDesc.at[i, "Description"])
 
     arrayOfAssignees = []
     for i in range(0, len(elevatedUserGet), 1):
@@ -303,10 +326,12 @@ def admin_ticket_view_info():
             elevatedUserGet.at[i, 'Username'])
 
     # Default to first possible assignee in case of anything...
+    selectedAssignee = arrayOfAssignees[0]
     selectedAssignee = ui.select(options=arrayOfAssignees, value=arrayOfAssignees[0],
                                  on_change=lambda: print("user selected"))
 
     arrayOfStatuses = ["Open", "Resolved", "On Hold"]
+    selectedStatus = arrayOfStatuses[0]
     selectedStatus = ui.select(options=arrayOfStatuses, value=arrayOfStatuses[0],
                                on_change=lambda: print("status selected"))
 
@@ -340,11 +365,11 @@ def admin_ticket_view_info():
         print("HISTORY ID IS: " +
               str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]))
 
-        print("Username is " + str(ticketUsername))
-        # cursor.execute("INSERT INTO TicketHistory (HistoryID, TicketNumber, Username, Assignee, Description, Timestamp) VALUES ('" + str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]) +
-        #                "', '" + str(ticketNumber) + "', '" + str(ticketUsername[0, "Username"]) + "', '" + str(ticketAssignee.at[0, "Assignee"]) + "', '" + str(ticketDesc.value) + "', '" + str(realTicketTimeStamp) + "')")
+        print("Username is " + str(ticketUsername.at[0, "User"]))
+        cursor.execute("INSERT INTO TicketHistory (HistoryID, TicketNumber, Username, Assignee, Description, Timestamp) VALUES ('" + str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]) +
+                       "', '" + str(ticketNumber) + "', '" + str(ticketUsername.at[0, "User"]) + "', '" + str(ticketAssignee.at[0, "Assignee"]) + "', '" + str(ticketDesc.value) + "', '" + str(realTicketTimeStamp) + "')")
 
-        # db_history.commit()
+        db_history.commit()
         cursor.close()
 
         ui.open(admin_page)
