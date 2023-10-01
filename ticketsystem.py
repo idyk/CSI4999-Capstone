@@ -5,6 +5,7 @@ import datetime
 
 db_tickets = sqlite3.connect(r'.\tickets.db')
 db_login = sqlite3.connect(r'.\login.db')
+db_history = sqlite3.connect(r'.\history.db')
 
 # The page that the user will see on first launch.
 
@@ -58,15 +59,11 @@ def nonadmin_page():
     ui.button("View Created Tickets", on_click=lambda: ui.open(
         nonadmin_ticket_view_list))
 
-
-@ui.page('/admin_page')
-def admin_page():
-    ui.label("Admin")
-
-
 # Creating a ticket as a nonadmin page. Lets user type title and issue, and then when they submit,
 # it will auto generate the next ticket number, as well as a timestamp.
 # It will default to No Assignee and Open until someone on Admin side takes control of ticket.
+
+
 @ui.page("/nonadmin_ticket_create")
 def nonadmin_ticket_create():
 
@@ -149,12 +146,54 @@ def nonadmin_ticket_view_info():
     ticketDesc = pd.read_sql_query(
         "SELECT Description from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
 
+    ticketAssignee = pd.read_sql_query(
+        "SELECT Assignee from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+
     ui.label("Ticket #" + str(ticketNumber))
     ui.label("Ticket Title: " + ticketTitle.at[0, "Title"])
     ui.label("Ticket Description: " + ticketDesc.at[0, "Description"])
 
     ui.button("View further information", on_click=lambda: ui.open(
         nonadmin_ticket_view_more_info))
+
+    ui.label("If you'd like to make changes to your ticket, feel free to do so.")
+    ticketTitle = ui.textarea("Update title.")
+    # ui.label("Issue:")
+    ticketDesc = ui.textarea("Update description.")
+    ui.button("Submit", on_click=lambda: updateTicket())
+
+    def updateTicket():
+        global username
+        indexToUse = ticketNumber
+        print("Updating into index " + str(indexToUse) +
+              " with the following information: ")
+        print(ticketTitle.value)
+        print(ticketDesc.value)
+        ticketTimeStamp = datetime.datetime.now()
+        realTicketTimeStamp = ticketTimeStamp.strftime(
+            "%b %d %Y") + " at " + ticketTimeStamp.strftime("%H") + ":" + ticketTimeStamp.strftime("%M")
+        print(realTicketTimeStamp)
+        cursor = db_tickets.cursor()
+        cursor.execute("UPDATE Tickets SET Title = '" + str(ticketTitle.value) + "', Description = '" + str(ticketDesc.value) + "', Assignee = '" + str(ticketAssignee.at[0, "Assignee"]) +
+                       "', Status = 'Open', Timestamp = '" + str(realTicketTimeStamp) + "' WHERE TicketNumber = '" + str(ticketNumber) + "'")
+        db_tickets.commit()
+        cursor.close()
+
+        cursor = db_history.cursor()
+        indexOfHistoryNumber = pd.read_sql_query(
+            "SELECT MAX(HistoryID) FROM TicketHistory", db_history)
+        indexOfHistoryNumber += 1
+
+        print("HISTORY ID IS: " +
+              str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]))
+        cursor.execute("INSERT INTO TicketHistory (HistoryID, TicketNumber, Username, Assignee, Description, Timestamp) VALUES ('" + str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]) +
+                       "', '" + str(ticketNumber) + "', '" + str(username) + "', '" + str(ticketAssignee.at[0, "Assignee"]) + "', '" + str(ticketDesc.value) + "', '" + str(realTicketTimeStamp) + "')")
+
+        db_history.commit()
+        cursor.close()
+
+        ui.open(nonadmin_page)
+
 
 # This shows more information that isn't really needed to know for the user, but they may want to see it still.
 
@@ -177,7 +216,138 @@ def nonadmin_ticket_view_more_info():
 
     ui.label("Time Created: " + ticketTimestamp.at[0, "Timestamp"])
     ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"])
-    ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
+    ui.label("Ticket Staus: " + ticketStatus.at[0, "Status"])
+
+
+# ADMIN VIEW SECTION
+
+@ui.page('/admin_page')
+def admin_page():
+    ui.label("This is the admin view.")
+    ui.button("Logout", on_click=lambda: ui.open(login_page))
+    ui.button("View Created Tickets", on_click=lambda: ui.open(
+        admin_ticket_view_list))
+
+
+@ui.page("/admin_ticket_view_list")
+def admin_ticket_view_list():
+    ui.button("Go back", on_click=lambda: ui.open(admin_page))
+
+    global username
+
+    print("Username getting pulled is " + username)
+    df_tickets = pd.read_sql_query(
+        "SELECT TicketNumber,Title from Tickets", db_tickets)
+
+    grid = ui.aggrid.from_pandas(df_tickets).classes('max-h-40')
+    grid.set_visibility(True)
+
+    ticketNumbersSqlQueryGet = pd.read_sql_query(
+        "SELECT TicketNumber FROM Tickets", db_tickets)
+
+    # This creates a dropdown for the user to pick from which ticket they would like to view further information on.
+    arrayOfTicketNumbers = []
+    for i in range(0, len(ticketNumbersSqlQueryGet), 1):
+        arrayOfTicketNumbers.append(
+            ticketNumbersSqlQueryGet.at[i, 'TicketNumber'])
+
+    global queriedTicketNumber
+    ui.label(
+        "Select the ticket from the dropdown to see more information on it.")
+    queriedTicketNumber = ui.select(options=arrayOfTicketNumbers,
+                                    on_change=lambda: ui.open(admin_ticket_view_info))
+
+
+@ui.page("/admin_ticket_view_info")
+def admin_ticket_view_info():
+    global queriedTicketNumber
+
+    print("Showing Ticket " + str(queriedTicketNumber.value) + ".")
+    ui.button("Go back", on_click=lambda: ui.open(admin_ticket_view_list))
+
+    ticketNumber = queriedTicketNumber.value
+
+    elevatedUserGet = pd.read_sql_query(
+        "SELECT Username FROM Logins WHERE Elevated = 'True'", db_login)
+
+    print("elevated length: " + str(len(elevatedUserGet)))
+
+    ticketTitle = pd.read_sql_query(
+        "SELECT Title from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+
+    ticketDesc = pd.read_sql_query(
+        "SELECT Description from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+
+    ticketTimestamp = pd.read_sql_query(
+        "SELECT Timestamp from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+
+    ticketAssignee = pd.read_sql_query(
+        "SELECT Assignee from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+
+    ticketStatus = pd.read_sql_query(
+        "SELECT Status from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+
+    ticketUsername = pd.read_sql_query(
+        "SELECT User from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+
+    ui.label("Ticket #" + str(ticketNumber))
+    ui.label("Ticket Title: " + ticketTitle.at[0, "Title"])
+    ui.label("Ticket Description: " + ticketDesc.at[0, "Description"])
+    ui.label("Time Created: " + ticketTimestamp.at[0, "Timestamp"])
+    ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"])
+    ui.label("Ticket Staus: " + ticketStatus.at[0, "Status"])
+
+    arrayOfAssignees = []
+    for i in range(0, len(elevatedUserGet), 1):
+        arrayOfAssignees.append(
+            elevatedUserGet.at[i, 'Username'])
+
+    # Default to first possible assignee in case of anything...
+    selectedAssignee = ui.select(options=arrayOfAssignees, value=arrayOfAssignees[0],
+                                 on_change=lambda: print("user selected"))
+
+    arrayOfStatuses = ["Open", "Resolved", "On Hold"]
+    selectedStatus = ui.select(options=arrayOfStatuses, value=arrayOfStatuses[0],
+                               on_change=lambda: print("status selected"))
+
+    ticketTitle = ui.textarea("Update title.")
+    # ui.label("Issue:")
+    ticketDesc = ui.textarea("Update description.")
+    ui.button("Submit", on_click=lambda: updateTicket())
+
+    def updateTicket():
+        global username
+        indexToUse = ticketNumber
+        print("Updating into index " + str(indexToUse) +
+              " with the following information: ")
+        print(ticketTitle.value)
+        print(ticketDesc.value)
+        ticketTimeStamp = datetime.datetime.now()
+        realTicketTimeStamp = ticketTimeStamp.strftime(
+            "%b %d %Y") + " at " + ticketTimeStamp.strftime("%H") + ":" + ticketTimeStamp.strftime("%M")
+        print(realTicketTimeStamp)
+        cursor = db_tickets.cursor()
+        cursor.execute("UPDATE Tickets SET Title = '" + str(ticketTitle.value) + "', Description = '" + str(ticketDesc.value) + "', Assignee = '" + str(selectedAssignee.value) +
+                       "', Status = '" + str(selectedStatus.value) + "', Timestamp = '" + str(realTicketTimeStamp) + "' WHERE TicketNumber = '" + str(ticketNumber) + "'")
+        db_tickets.commit()
+        cursor.close()
+
+        cursor = db_history.cursor()
+        indexOfHistoryNumber = pd.read_sql_query(
+            "SELECT MAX(HistoryID) FROM TicketHistory", db_history)
+        indexOfHistoryNumber += 1
+
+        print("HISTORY ID IS: " +
+              str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]))
+
+        print("Username is " + str(ticketUsername))
+        # cursor.execute("INSERT INTO TicketHistory (HistoryID, TicketNumber, Username, Assignee, Description, Timestamp) VALUES ('" + str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]) +
+        #                "', '" + str(ticketNumber) + "', '" + str(ticketUsername[0, "Username"]) + "', '" + str(ticketAssignee.at[0, "Assignee"]) + "', '" + str(ticketDesc.value) + "', '" + str(realTicketTimeStamp) + "')")
+
+        # db_history.commit()
+        cursor.close()
+
+        ui.open(admin_page)
 
 
 login_page()
