@@ -197,8 +197,8 @@ def nonadmin_ticket_view_info():
 
         print("HISTORY ID IS: " +
               str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]))
-        cursor.execute("INSERT INTO TicketHistory (HistoryID, TicketNumber, Username, Assignee, Description, Timestamp) VALUES ('" + str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]) +
-                       "', '" + str(ticketNumber) + "', '" + str(username) + "', '" + str(ticketAssignee.at[0, "Assignee"]) + "', '" + str(ticketDesc.value) + "', '" + str(realTicketTimeStamp) + "')")
+        cursor.execute("INSERT INTO TicketHistory (HistoryID, TicketNumber, Username, Assignee, Description, Timestamp, Updater, Title) VALUES ('" + str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]) +
+                       "', '" + str(ticketNumber) + "', '" + str(username) + "', '" + str(ticketAssignee.at[0, "Assignee"]) + "', '" + str(ticketDesc.value) + "', '" + str(realTicketTimeStamp) + "', '" + str(username) + "', '" + str(ticketTitle.value) + "')")
 
         db_history.commit()
         cursor.close()
@@ -302,6 +302,12 @@ def admin_ticket_view_info():
     ticketHistoryTimestamp = pd.read_sql_query(
         "SELECT Timestamp FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
 
+    ticketHistoryUpdater = pd.read_sql_query(
+        "SELECT Updater FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
+
+    ticketHistoryTitle = pd.read_sql_query(
+        "SELECT Title FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
+
     ui.query('.nicegui-content').style('display: inline; padding: 0px')
     ui.button("Go back", on_click=lambda: ui.open(admin_ticket_view_list))
 
@@ -323,7 +329,7 @@ def admin_ticket_view_info():
 
     for i in range(0, len(ticketHistoryDesc), 1):
         ui.label("Ticket Description at " +
-                 ticketHistoryTimestamp.at[i, "Timestamp"]).style('text-align: center; padding: 20px')
+                 ticketHistoryTimestamp.at[i, "Timestamp"] + " by " + ticketHistoryUpdater.at[i, "Updater"] + " with title " + ticketHistoryTitle.at[i, "Title"]).style('text-align: center; padding: 20px')
         ui.label(ticketHistoryDesc.at[i, "Description"]).style(
             'text-align: center; padding: 20px')
 
@@ -378,8 +384,8 @@ def admin_ticket_view_info():
               str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]))
 
         print("Username is " + str(ticketUsername.at[0, "User"]))
-        cursor.execute("INSERT INTO TicketHistory (HistoryID, TicketNumber, Username, Assignee, Description, Timestamp) VALUES ('" + str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]) +
-                       "', '" + str(ticketNumber) + "', '" + str(ticketUsername.at[0, "User"]) + "', '" + str(ticketAssignee.at[0, "Assignee"]) + "', '" + str(ticketDesc.value) + "', '" + str(realTicketTimeStamp) + "')")
+        cursor.execute("INSERT INTO TicketHistory (HistoryID, TicketNumber, Username, Assignee, Description, Timestamp, Updater, Title) VALUES ('" + str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]) +
+                       "', '" + str(ticketNumber) + "', '" + str(ticketUsername.at[0, "User"]) + "', '" + str(ticketAssignee.at[0, "Assignee"]) + "', '" + str(ticketDesc.value) + "', '" + str(realTicketTimeStamp) + "', '" + str(username) + "', '" + str(ticketTitle.value) + "')")
 
         db_history.commit()
         cursor.close()
