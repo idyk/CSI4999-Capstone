@@ -5,6 +5,7 @@ import datetime
 
 db_tickets = sqlite3.connect(r'.\tickets.db')
 db_login = sqlite3.connect(r'.\login.db')
+db_history = sqlite3.connect(r'.\history.db')
 
 # The page that the user will see on first launch.
 
@@ -58,19 +59,11 @@ def nonadmin_page():
     ui.button("View Created Tickets", on_click=lambda: ui.open(
         nonadmin_ticket_view_list))
 
-
-@ui.page('/admin_page')
-def admin_page():
-    ui.label("Admin")
-    ui.button("Logout", on_click=lambda: ui.open(login_page))
-    ui.button("View Created Tickets", on_click=lambda: ui.open(
-        admin_ticket_view_list))
-
-
-
 # Creating a ticket as a nonadmin page. Lets user type title and issue, and then when they submit,
 # it will auto generate the next ticket number, as well as a timestamp.
 # It will default to No Assignee and Open until someone on Admin side takes control of ticket.
+
+
 @ui.page("/nonadmin_ticket_create")
 def nonadmin_ticket_create():
 
@@ -141,28 +134,98 @@ def nonadmin_ticket_view_list():
 @ui.page("/nonadmin_ticket_view_info")
 def nonadmin_ticket_view_info():
     global queriedTicketNumber
-
     print("Showing Ticket " + str(queriedTicketNumber.value) + ".")
-    ui.button("Go back", on_click=lambda: ui.open(nonadmin_ticket_view_list))
-
     ticketNumber = queriedTicketNumber.value
-
     ticketTitle = pd.read_sql_query(
         "SELECT Title from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
-
     ticketDesc = pd.read_sql_query(
         "SELECT Description from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+    ticketAssignee = pd.read_sql_query(
+        "SELECT Assignee from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+    ticketTimestamp = pd.read_sql_query(
+        "SELECT Timestamp from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+    ticketStatus = pd.read_sql_query(
+        "SELECT Status from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+    ticketUsername = pd.read_sql_query(
+        "SELECT User from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+    ticketHistoryDesc = pd.read_sql_query(
+        "SELECT Description FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
+    ticketHistoryTimestamp = pd.read_sql_query(
+        "SELECT Timestamp FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
+    ticketHistoryUpdater = pd.read_sql_query(
+        "SELECT Updater FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
+    ticketHistoryTitle = pd.read_sql_query(
+        "SELECT Title FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
+    
+    ui.query('.nicegui-content').style('display: inline; padding: 0px')
+    
+    ui.button("Go back", on_click=lambda: ui.open(nonadmin_ticket_view_list))
 
-    ui.label("Ticket #" + str(ticketNumber))
-    ui.label("Ticket Title: " + ticketTitle.at[0, "Title"])
-    ui.label("Ticket Description: " + ticketDesc.at[0, "Description"])
+    with ui.row().classes('border-4 border-indigo-600 justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
+        ui.label("Ticket #" + str(ticketNumber))
+        ui.label("Ticket Title: " + ticketTitle.at[0, "Title"])
+        ui.label("Last Updated: " + ticketTimestamp.at[0, "Timestamp"])
+        ui.label("Ticket User: " + ticketUsername.at[0, "User"])
+        ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"])
+        ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
+
+    with ui.column().classes('border-4 border-indigo-600 justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
+        ui.label("Current Ticket Description: ")
+        ui.label(ticketDesc.at[0, "Description"])
+
+    # Ticket History
+    ui.label("History of Ticket").style(
+        'color: red; font-weight: bold; text-align: center')
+
+    for i in range(0, len(ticketHistoryDesc), 1):
+        ui.label("Ticket Description at " +
+                 ticketHistoryTimestamp.at[i, "Timestamp"] + " by " + ticketHistoryUpdater.at[i, "Updater"] + " with title " + ticketHistoryTitle.at[i, "Title"]).style('text-align: center; padding: 20px')
+        ui.label(ticketHistoryDesc.at[i, "Description"]).style(
+            'text-align: center; padding: 20px')
 
     ui.button("View further information", on_click=lambda: ui.open(
         nonadmin_ticket_view_more_info))
 
+    ui.label("Modify Ticket").style(
+        'color: red; font-weight: bold; text-align: center')
+    ticketTitle = ui.textarea("Update title.")
+    ticketDesc = ui.textarea("Update description.")
+    ui.button("Submit", on_click=lambda: updateTicket())
+
+    def updateTicket():
+        global username
+        indexToUse = ticketNumber
+        print("Updating into index " + str(indexToUse) +
+              " with the following information: ")
+        print(ticketTitle.value)
+        print(ticketDesc.value)
+        ticketTimeStamp = datetime.datetime.now()
+        realTicketTimeStamp = ticketTimeStamp.strftime(
+            "%b %d %Y") + " at " + ticketTimeStamp.strftime("%H") + ":" + ticketTimeStamp.strftime("%M")
+        print(realTicketTimeStamp)
+        cursor = db_tickets.cursor()
+        cursor.execute("UPDATE Tickets SET Title = '" + str(ticketTitle.value) + "', Description = '" + str(ticketDesc.value) + "', Assignee = '" + str(ticketAssignee.at[0, "Assignee"]) +
+                       "', Status = 'Open', Timestamp = '" + str(realTicketTimeStamp) + "' WHERE TicketNumber = '" + str(ticketNumber) + "'")
+        db_tickets.commit()
+        cursor.close()
+
+        cursor = db_history.cursor()
+        indexOfHistoryNumber = pd.read_sql_query(
+            "SELECT MAX(HistoryID) FROM TicketHistory", db_history)
+        indexOfHistoryNumber += 1
+
+        print("HISTORY ID IS: " +
+              str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]))
+        cursor.execute("INSERT INTO TicketHistory (HistoryID, TicketNumber, Username, Assignee, Description, Timestamp, Updater, Title) VALUES ('" + str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]) +
+                       "', '" + str(ticketNumber) + "', '" + str(username) + "', '" + str(ticketAssignee.at[0, "Assignee"]) + "', '" + str(ticketDesc.value) + "', '" + str(realTicketTimeStamp) + "', '" + str(username) + "', '" + str(ticketTitle.value) + "')")
+
+        db_history.commit()
+        cursor.close()
+
+        ui.open(nonadmin_page)
+
+
 # This shows more information that isn't really needed to know for the user, but they may want to see it still.
-
-
 @ui.page("/nonadmin_ticket_view_more_info")
 def nonadmin_ticket_view_more_info():
     ui.button("Go back", on_click=lambda: ui.open(nonadmin_ticket_view_info))
@@ -181,7 +244,172 @@ def nonadmin_ticket_view_more_info():
 
     ui.label("Time Created: " + ticketTimestamp.at[0, "Timestamp"])
     ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"])
-    ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
+    ui.label("Ticket Staus: " + ticketStatus.at[0, "Status"])
+
+
+# ADMIN VIEW SECTION!!!!!!!!!
+
+@ui.page('/admin_page')
+def admin_page():
+    ui.label("This is the admin view.")
+    ui.button("Logout", on_click=lambda: ui.open(login_page))
+    ui.button("View Created Tickets", on_click=lambda: ui.open(
+        admin_ticket_view_list))
+
+
+@ui.page("/admin_ticket_view_list")
+def admin_ticket_view_list():
+    ui.button("Go back", on_click=lambda: ui.open(admin_page))
+
+    global username
+
+    print("Username getting pulled is " + username)
+    df_tickets = pd.read_sql_query(
+        "SELECT TicketNumber,Title from Tickets", db_tickets)
+
+    grid = ui.aggrid.from_pandas(df_tickets).classes('max-h-40')
+    grid.set_visibility(True)
+
+    ticketNumbersSqlQueryGet = pd.read_sql_query(
+        "SELECT TicketNumber FROM Tickets", db_tickets)
+
+    # This creates a dropdown for the user to pick from which ticket they would like to view further information on.
+    arrayOfTicketNumbers = []
+    for i in range(0, len(ticketNumbersSqlQueryGet), 1):
+        arrayOfTicketNumbers.append(
+            ticketNumbersSqlQueryGet.at[i, 'TicketNumber'])
+
+    global queriedTicketNumber
+    ui.label(
+        "Select the ticket from the dropdown to see more information on it.")
+    queriedTicketNumber = ui.select(options=arrayOfTicketNumbers,
+                                    on_change=lambda: ui.open(admin_ticket_view_info))
+
+
+@ui.page("/admin_ticket_view_info")
+def admin_ticket_view_info():
+    global queriedTicketNumber
+
+    print("Showing Ticket " + str(queriedTicketNumber.value) + ".")
+
+    ticketNumber = queriedTicketNumber.value
+
+    elevatedUserGet = pd.read_sql_query(
+        "SELECT Username FROM Logins WHERE Elevated = 'True'", db_login)
+
+    ticketTitle = pd.read_sql_query(
+        "SELECT Title from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+
+    ticketDesc = pd.read_sql_query(
+        "SELECT Description from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+
+    ticketTimestamp = pd.read_sql_query(
+        "SELECT Timestamp from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+
+    ticketAssignee = pd.read_sql_query(
+        "SELECT Assignee from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+
+    ticketStatus = pd.read_sql_query(
+        "SELECT Status from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+
+    ticketUsername = pd.read_sql_query(
+        "SELECT User from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+
+    ticketHistoryDesc = pd.read_sql_query(
+        "SELECT Description FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
+
+    ticketHistoryTimestamp = pd.read_sql_query(
+        "SELECT Timestamp FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
+
+    ticketHistoryUpdater = pd.read_sql_query(
+        "SELECT Updater FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
+
+    ticketHistoryTitle = pd.read_sql_query(
+        "SELECT Title FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
+
+    ui.query('.nicegui-content').style('display: inline; padding: 0px')
+    ui.button("Go back", on_click=lambda: ui.open(admin_ticket_view_list))
+
+    with ui.row().classes('border-4 border-indigo-600 justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
+        ui.label("Ticket #" + str(ticketNumber))
+        ui.label("Ticket Title: " + ticketTitle.at[0, "Title"])
+        ui.label("Last Updated: " + ticketTimestamp.at[0, "Timestamp"])
+        ui.label("Ticket User: " + ticketUsername.at[0, "User"])
+        ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"])
+        ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
+
+    with ui.column().classes('border-4 border-indigo-600 justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
+        ui.label("Current Ticket Description: ")
+        ui.label(ticketDesc.at[0, "Description"])
+
+    # Ticket History
+    ui.label("History of Ticket").style(
+        'color: red; font-weight: bold; text-align: center')
+
+    for i in range(0, len(ticketHistoryDesc), 1):
+        ui.label("Ticket Description at " +
+                 ticketHistoryTimestamp.at[i, "Timestamp"] + " by " + ticketHistoryUpdater.at[i, "Updater"] + " with title " + ticketHistoryTitle.at[i, "Title"]).style('text-align: center; padding: 20px')
+        ui.label(ticketHistoryDesc.at[i, "Description"]).style(
+            'text-align: center; padding: 20px')
+
+    arrayOfAssignees = []
+    for i in range(0, len(elevatedUserGet), 1):
+        arrayOfAssignees.append(
+            elevatedUserGet.at[i, 'Username'])
+
+    ui.label("Modify Ticket").style(
+        'color: red; font-weight: bold; text-align: center')
+
+    # Default to first possible assignee in case of anything...
+    selectedAssignee = arrayOfAssignees[0]
+    arrayOfStatuses = ["Open", "Resolved", "On Hold"]
+    selectedStatus = arrayOfStatuses[0]
+
+    with ui.column().classes('border-4 border-indigo-600 justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
+        ui.label("Update Assignee")
+        selectedAssignee = ui.select(options=arrayOfAssignees, value=arrayOfAssignees[0],
+                                     on_change=lambda: print("user selected")).classes('w-max')
+        ui.label("Update Status")
+        selectedStatus = ui.select(options=arrayOfStatuses, value=arrayOfStatuses[0],
+                                   on_change=lambda: print("status selected")).classes('w-max')
+        ticketTitle = ui.textarea("Update title.").classes('w-full')
+        ticketDesc = ui.textarea("Update description.").classes('w-full')
+        ui.button("Submit", on_click=lambda: updateTicket()
+                  ).classes('w-6/12')
+
+    def updateTicket():
+        global username
+        indexToUse = ticketNumber
+        print("Updating into index " + str(indexToUse) +
+              " with the following information: ")
+        print(ticketTitle.value)
+        print(ticketDesc.value)
+        ticketTimeStamp = datetime.datetime.now()
+        realTicketTimeStamp = ticketTimeStamp.strftime(
+            "%b %d %Y") + " at " + ticketTimeStamp.strftime("%H") + ":" + ticketTimeStamp.strftime("%M")
+        print(realTicketTimeStamp)
+        cursor = db_tickets.cursor()
+        cursor.execute("UPDATE Tickets SET Title = '" + str(ticketTitle.value) + "', Description = '" + str(ticketDesc.value) + "', Assignee = '" + str(selectedAssignee.value) +
+                       "', Status = '" + str(selectedStatus.value) + "', Timestamp = '" + str(realTicketTimeStamp) + "' WHERE TicketNumber = '" + str(ticketNumber) + "'")
+        db_tickets.commit()
+        cursor.close()
+
+        cursor = db_history.cursor()
+        indexOfHistoryNumber = pd.read_sql_query(
+            "SELECT MAX(HistoryID) FROM TicketHistory", db_history)
+        indexOfHistoryNumber += 1
+
+        print("HISTORY ID IS: " +
+              str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]))
+
+        print("Username is " + str(ticketUsername.at[0, "User"]))
+        cursor.execute("INSERT INTO TicketHistory (HistoryID, TicketNumber, Username, Assignee, Description, Timestamp, Updater, Title) VALUES ('" + str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]) +
+                       "', '" + str(ticketNumber) + "', '" + str(ticketUsername.at[0, "User"]) + "', '" + str(ticketAssignee.at[0, "Assignee"]) + "', '" + str(ticketDesc.value) + "', '" + str(realTicketTimeStamp) + "', '" + str(username) + "', '" + str(ticketTitle.value) + "')")
+
+        db_history.commit()
+        cursor.close()
+
+        ui.open(admin_page)
 
 
 # Admin is able to look at ticket title and number
