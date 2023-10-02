@@ -134,41 +134,60 @@ def nonadmin_ticket_view_list():
 @ui.page("/nonadmin_ticket_view_info")
 def nonadmin_ticket_view_info():
     global queriedTicketNumber
-
     print("Showing Ticket " + str(queriedTicketNumber.value) + ".")
-    ui.button("Go back", on_click=lambda: ui.open(nonadmin_ticket_view_list))
-
     ticketNumber = queriedTicketNumber.value
-
     ticketTitle = pd.read_sql_query(
         "SELECT Title from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
-
     ticketDesc = pd.read_sql_query(
         "SELECT Description from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
-
     ticketAssignee = pd.read_sql_query(
         "SELECT Assignee from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
-
+    ticketTimestamp = pd.read_sql_query(
+        "SELECT Timestamp from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+    ticketStatus = pd.read_sql_query(
+        "SELECT Status from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+    ticketUsername = pd.read_sql_query(
+        "SELECT User from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
     ticketHistoryDesc = pd.read_sql_query(
         "SELECT Description FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
-
     ticketHistoryTimestamp = pd.read_sql_query(
         "SELECT Timestamp FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
+    ticketHistoryUpdater = pd.read_sql_query(
+        "SELECT Updater FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
+    ticketHistoryTitle = pd.read_sql_query(
+        "SELECT Title FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
+    
+    ui.query('.nicegui-content').style('display: inline; padding: 0px')
+    
+    ui.button("Go back", on_click=lambda: ui.open(nonadmin_ticket_view_list))
 
-    ui.label("Ticket #" + str(ticketNumber))
-    ui.label("Ticket Title: " + ticketTitle.at[0, "Title"])
-    ui.label("Ticket Description: " + ticketDesc.at[0, "Description"])
+    with ui.row().classes('border-4 border-indigo-600 justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
+        ui.label("Ticket #" + str(ticketNumber))
+        ui.label("Ticket Title: " + ticketTitle.at[0, "Title"])
+        ui.label("Last Updated: " + ticketTimestamp.at[0, "Timestamp"])
+        ui.label("Ticket User: " + ticketUsername.at[0, "User"])
+        ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"])
+        ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
+
+    with ui.column().classes('border-4 border-indigo-600 justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
+        ui.label("Current Ticket Description: ")
+        ui.label(ticketDesc.at[0, "Description"])
 
     # Ticket History
+    ui.label("History of Ticket").style(
+        'color: red; font-weight: bold; text-align: center')
+
     for i in range(0, len(ticketHistoryDesc), 1):
         ui.label("Ticket Description at " +
-                 ticketHistoryTimestamp.at[i, "Timestamp"])
-        ui.label(ticketHistoryDesc.at[i, "Description"])
+                 ticketHistoryTimestamp.at[i, "Timestamp"] + " by " + ticketHistoryUpdater.at[i, "Updater"] + " with title " + ticketHistoryTitle.at[i, "Title"]).style('text-align: center; padding: 20px')
+        ui.label(ticketHistoryDesc.at[i, "Description"]).style(
+            'text-align: center; padding: 20px')
 
     ui.button("View further information", on_click=lambda: ui.open(
         nonadmin_ticket_view_more_info))
 
-    ui.label("If you'd like to make changes to your ticket, feel free to do so.")
+    ui.label("Modify Ticket").style(
+        'color: red; font-weight: bold; text-align: center')
     ticketTitle = ui.textarea("Update title.")
     ticketDesc = ui.textarea("Update description.")
     ui.button("Submit", on_click=lambda: updateTicket())
