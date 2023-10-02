@@ -134,60 +134,41 @@ def nonadmin_ticket_view_list():
 @ui.page("/nonadmin_ticket_view_info")
 def nonadmin_ticket_view_info():
     global queriedTicketNumber
+
     print("Showing Ticket " + str(queriedTicketNumber.value) + ".")
-    ticketNumber = queriedTicketNumber.value
-    ticketTitle = pd.read_sql_query(
-        "SELECT Title from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
-    ticketDesc = pd.read_sql_query(
-        "SELECT Description from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
-    ticketAssignee = pd.read_sql_query(
-        "SELECT Assignee from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
-    ticketTimestamp = pd.read_sql_query(
-        "SELECT Timestamp from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
-    ticketStatus = pd.read_sql_query(
-        "SELECT Status from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
-    ticketUsername = pd.read_sql_query(
-        "SELECT User from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
-    ticketHistoryDesc = pd.read_sql_query(
-        "SELECT Description FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
-    ticketHistoryTimestamp = pd.read_sql_query(
-        "SELECT Timestamp FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
-    ticketHistoryUpdater = pd.read_sql_query(
-        "SELECT Updater FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
-    ticketHistoryTitle = pd.read_sql_query(
-        "SELECT Title FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
-    
-    ui.query('.nicegui-content').style('display: inline; padding: 0px')
-    
     ui.button("Go back", on_click=lambda: ui.open(nonadmin_ticket_view_list))
 
-    with ui.row().classes('border-4 border-indigo-600 justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
-        ui.label("Ticket #" + str(ticketNumber))
-        ui.label("Ticket Title: " + ticketTitle.at[0, "Title"])
-        ui.label("Last Updated: " + ticketTimestamp.at[0, "Timestamp"])
-        ui.label("Ticket User: " + ticketUsername.at[0, "User"])
-        ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"])
-        ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
+    ticketNumber = queriedTicketNumber.value
 
-    with ui.column().classes('border-4 border-indigo-600 justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
-        ui.label("Current Ticket Description: ")
-        ui.label(ticketDesc.at[0, "Description"])
+    ticketTitle = pd.read_sql_query(
+        "SELECT Title from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+
+    ticketDesc = pd.read_sql_query(
+        "SELECT Description from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+
+    ticketAssignee = pd.read_sql_query(
+        "SELECT Assignee from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+
+    ticketHistoryDesc = pd.read_sql_query(
+        "SELECT Description FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
+
+    ticketHistoryTimestamp = pd.read_sql_query(
+        "SELECT Timestamp FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
+
+    ui.label("Ticket #" + str(ticketNumber))
+    ui.label("Ticket Title: " + ticketTitle.at[0, "Title"])
+    ui.label("Ticket Description: " + ticketDesc.at[0, "Description"])
 
     # Ticket History
-    ui.label("History of Ticket").style(
-        'color: red; font-weight: bold; text-align: center')
-
     for i in range(0, len(ticketHistoryDesc), 1):
         ui.label("Ticket Description at " +
-                 ticketHistoryTimestamp.at[i, "Timestamp"] + " by " + ticketHistoryUpdater.at[i, "Updater"] + " with title " + ticketHistoryTitle.at[i, "Title"]).style('text-align: center; padding: 20px')
-        ui.label(ticketHistoryDesc.at[i, "Description"]).style(
-            'text-align: center; padding: 20px')
+                 ticketHistoryTimestamp.at[i, "Timestamp"])
+        ui.label(ticketHistoryDesc.at[i, "Description"])
 
     ui.button("View further information", on_click=lambda: ui.open(
         nonadmin_ticket_view_more_info))
 
-    ui.label("Modify Ticket").style(
-        'color: red; font-weight: bold; text-align: center')
+    ui.label("If you'd like to make changes to your ticket, feel free to do so.")
     ticketTitle = ui.textarea("Update title.")
     ticketDesc = ui.textarea("Update description.")
     ui.button("Submit", on_click=lambda: updateTicket())
@@ -411,95 +392,6 @@ def admin_ticket_view_info():
 
         ui.open(admin_page)
 
-
-# Admin is able to look at ticket title and number
-
-@ui.page("/admin_ticket_view_list")
-def admin_ticket_view_list():
-    ui.button("Go back", on_click=lambda: ui.open(admin_page))
-
-    global username
-
-    print("Username getting pulled is " + username)
-    df_tickets = pd.read_sql_query(
-        "SELECT TicketNumber,Title from Tickets WHERE User = '" + username + "'", db_tickets)
-
-    grid = ui.aggrid.from_pandas(df_tickets).classes('max-h-40')
-    grid.set_visibility(True)
-
-    ticketNumbersSqlQueryGet = pd.read_sql_query(
-        "SELECT TicketNumber FROM Tickets WHERE User = '" + username + "'", db_tickets)
-
-    # This creates a dropdown for the user to pick from which ticket they would like to view further information on.
-    arrayOfTicketNumbers = []
-    for i in range(0, len(ticketNumbersSqlQueryGet), 1):
-        print("One of " + str(username) + "'s Ticket Numbers: " +
-              str(ticketNumbersSqlQueryGet.at[i, 'TicketNumber']))
-        arrayOfTicketNumbers.append(
-            ticketNumbersSqlQueryGet.at[i, 'TicketNumber'])
-
-    global queriedTicketNumber
-    ui.label(
-        "Select the ticket from the dropdown to see more information on it.")
-    queriedTicketNumber = ui.select(options=arrayOfTicketNumbers,
-                                    on_change=lambda: ui.open(admin_ticket_view_info))
-    
-
-
-# Show initial details of the selected ticket similar to the nonadmin view
-
-@ui.page("/admin_ticket_view_info")
-def admin_ticket_view_info():
-    global queriedTicketNumber
-
-    print("Showing Ticket " + str(queriedTicketNumber.value) + ".")
-    ui.button("Go back", on_click=lambda: ui.open(admin_ticket_view_list))
-
-    ticketNumber = queriedTicketNumber.value
-
-    ticketTitle = pd.read_sql_query(
-        "SELECT Title from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
-
-    ticketDesc = pd.read_sql_query(
-        "SELECT Description from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
-
-    ui.label("Ticket #" + str(ticketNumber))
-    ui.label("Ticket Title: " + ticketTitle.at[0, "Title"])
-    ui.label("Ticket Description: " + ticketDesc.at[0, "Description"])
-
-    ui.button("View further information", on_click=lambda: ui.open(
-        admin_ticket_view_more_info))
-
-
-
-# Edit page to allow the admin to respond and update the status of a given ticket
-
-@ui.page("/admin_ticket_edit_page")
-def admin_ticket_edit_page():
-    ui.label("Edit Page")
-    ui.button("Save Button")
-
-# View more information about a selected ticket also similar to the nonadmin side
-
-@ui.page("/admin_ticket_view_more_info")
-def admin_ticket_view_more_info():
-    ui.button("Go back", on_click=lambda: ui.open(admin_ticket_view_info))
-
-    global queriedTicketNumber
-    ticketNumber = queriedTicketNumber.value
-
-    ticketTimestamp = pd.read_sql_query(
-        "SELECT Timestamp from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
-
-    ticketAssignee = pd.read_sql_query(
-        "SELECT Assignee from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
-
-    ticketStatus = pd.read_sql_query(
-        "SELECT Status from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
-
-    ui.label("Time Created: " + ticketTimestamp.at[0, "Timestamp"])
-    ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"])
-    ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
 
 login_page()
 ui.run()
