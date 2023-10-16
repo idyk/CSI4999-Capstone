@@ -3,6 +3,7 @@ import sqlite3
 import pandas as pd
 import datetime
 
+
 db_tickets = sqlite3.connect(r'.\tickets.db')
 db_login = sqlite3.connect(r'.\login.db')
 
@@ -11,13 +12,17 @@ db_login = sqlite3.connect(r'.\login.db')
 
 @ui.page('/login_page')
 def login_page():
-    ui.label("Welcome to Ticket System! (name pending)")
-    ui.label("Please login with your credentials.")
+    with ui.row().classes('w-full justify-center'):
+        with ui.column().classes('w-full items-center'):
+            ui.query('body').style('background-image: linear-gradient(to right, #6495ED, #00FFFF);')
+            ui.label("Welcome to Ticket System! (name pending)").style('color: white')
+            ui.label("Please login with your credentials.").style('color: white')
 
-    username = ui.input(label="Username")
-    password = ui.input(label="Password")
+            username = ui.input(label="Username")
+            password = ui.input(label="Password")
+            
+            ui.button("Sign in", on_click=lambda: attemptLogin())
 
-    ui.button("Sign in", on_click=lambda: attemptLogin())
 
     # This checks the username and password against the login database for validation. It will also check if the user is elevated or not to
     # direct them to the correct set of pages.
