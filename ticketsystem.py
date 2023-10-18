@@ -15,18 +15,21 @@ db_history = sqlite3.connect(r'.\history.db')
 def login_page():
     with ui.row().classes('w-full justify-center'):
         with ui.column().classes('w-full items-center'):
-            ui.query('body').style('background-image: linear-gradient(to right, #6495ED, #00FFFF);')
-            ui.label("Welcome to Ticket System! (name pending)").style('color: white')
-            ui.label("Please login with your credentials.").style('color: white')
+            ui.query('body').style(
+                'background-image: linear-gradient(to right, #6495ED, #00FFFF);')
+            ui.label("Welcome to Ticket System! (name pending)").style(
+                'color: white')
+            ui.label("Please login with your credentials.").style(
+                'color: white')
 
             username = ui.input(label="Username")
             password = ui.input(label="Password")
-            
-            ui.button("Sign in", on_click=lambda: attemptLogin())
 
+            ui.button("Sign in", on_click=lambda: attemptLogin())
 
     # This checks the username and password against the login database for validation. It will also check if the user is elevated or not to
     # direct them to the correct set of pages.
+
     def attemptLogin():
         usernameSqlQueryCheck = pd.read_sql_query(
             "SELECT Username FROM Logins WHERE Username = '" + username.value + "'", db_login)
@@ -98,6 +101,19 @@ def nonadmin_ticket_create():
                        "', '" + str(ticketTitle.value) + "', '" + str(ticketDesc.value) + "', '" + str(realTicketTimeStamp) + "', 'No Assignee', 'Open', '" + username + "')")
         db_tickets.commit()
         cursor.close()
+
+        cursor = db_history.cursor()
+        indexOfHistoryNumber = pd.read_sql_query(
+            "SELECT MAX(HistoryID) FROM TicketHistory", db_history)
+        indexOfHistoryNumber += 1
+
+        print("HISTORY ID IS: " +
+              str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]))
+        cursor.execute("INSERT INTO TicketHistory (HistoryID, TicketNumber, Username, Assignee, Description, Timestamp, Updater, Title) VALUES ('" + str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]) +
+                       "', '" + str(indexToUse) + "', '" + str(username) + "', 'No Assignee', '" + str(ticketDesc.value) + "', '" + str(realTicketTimeStamp) + "', '" + str(username) + "', '" + str(ticketTitle.value) + "')")
+        db_history.commit()
+        cursor.close()
+
         ui.open(nonadmin_page)
 
 # This lets the user view their tickets list by ticket number and title only.
@@ -161,9 +177,9 @@ def nonadmin_ticket_view_info():
         "SELECT Updater FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
     ticketHistoryTitle = pd.read_sql_query(
         "SELECT Title FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
-    
+
     ui.query('.nicegui-content').style('display: inline; padding: 0px')
-    
+
     ui.button("Go back", on_click=lambda: ui.open(nonadmin_ticket_view_list))
 
     with ui.row().classes('border-4 border-indigo-600 justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
