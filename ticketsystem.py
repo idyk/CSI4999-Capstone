@@ -308,6 +308,52 @@ def admin_page():
                 "font-size: 25px;")
             ui.button("View Created Tickets", on_click=lambda: ui.open(
                 admin_ticket_view_list), color="orange", icon="search").classes("py-2 px-4 rounded-full")
+            ui.button("Create A User", on_click=lambda: ui.open(
+                admin_create_user), color="pink", icon="add").classes("py-2 px-4 rounded-full")
+
+
+@ui.page("/admin_create_user")
+def admin_create_user():
+    ui.query('body').style(
+        'background: rgb(242,125,119); background: linear-gradient(31deg, rgba(242,125,119,1) 0%, rgba(244,122,77,1) 30%, rgba(235,225,150,1) 70%, rgba(214,130,32,1) 99%);')
+
+    ui.button("Go back", on_click=lambda: ui.open(
+        admin_page), color="red", icon="arrow_back")
+    with ui.row().classes('w-2/3 border-2 border-red-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin-left: auto; margin-right: auto; background-color: white'):
+        with ui.column().classes('w-full items-center'):
+            newUsername = ui.input(
+                "Create username.").classes('w-50 items-center').style("text-align: center")
+            newPassword = ui.input(
+                "Create password.").classes('w-50')
+            ui.label("Elevated?")
+            elevationStatus = ui.select(options=["False", "True"])
+            ui.button("Create User", on_click=lambda: generateUser(
+                newUsername.value, newPassword.value, elevationStatus.value), color="green", icon="add_circle")
+
+    def generateUser(usernameInput, passwordInput, elevationInput):
+
+        checkUniqueUsername = pd.read_sql_query(
+            "SELECT EXISTS(SELECT * FROM Logins WHERE Username = '" + str(usernameInput) + "')", db_login)
+
+        if checkUniqueUsername.at[0, "EXISTS(SELECT * FROM Logins WHERE Username = '" + str(usernameInput) + "')"] == 1:
+            print("Username already exists")
+            ui.notify("Username already exists.")
+
+        else:
+            cursor = db_login.cursor()
+            userID = pd.read_sql_query(
+                "SELECT MAX(UserID) FROM Logins", db_login)
+            userID += 1
+
+            print("NEW USER ID IS: " +
+                  str(userID.at[0, "MAX(UserID)"]))
+
+            print("New username is " + str(usernameInput))
+            cursor.execute("INSERT INTO Logins (UserID, Username, Password, Elevated) VALUES ('" + str(userID.at[0, "MAX(UserID)"]) +
+                           "', '" + str(usernameInput) + "', '" + str(passwordInput) + "', '" + str(elevationInput) + "')")
+            db_login.commit()
+            cursor.close()
+            ui.open(admin_page)
 
 
 @ui.page("/admin_ticket_view_list")
