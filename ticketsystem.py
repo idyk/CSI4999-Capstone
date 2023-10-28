@@ -240,7 +240,7 @@ def nonadmin_ticket_view_info():
         else:
             print("fill")
             with container:
-                with ui.column().classes('w-full items-center'):
+                with ui.column().classes('w-max items-center border-2 border-indigo-600 justify-center items-center .p-12 rounded-lg').style("background-color: white;"):
                     for i in range(0, len(ticketHistoryDesc), 1):
                         ui.label("Ticket Description at " +
                                  ticketHistoryTimestamp.at[i, "Timestamp"] + " by " + ticketHistoryUpdater.at[i, "Updater"] + " with title " + ticketHistoryTitle.at[i, "Title"]).style('text-align: center; padding: 20px')
@@ -249,8 +249,6 @@ def nonadmin_ticket_view_info():
 
     with ui.row().classes('w-full justify-center'):
         with ui.column().classes('w-full items-center'):
-            ui.label("You can modify your ticket's description below.").style(
-                'color: black; font-weight: bold; text-align: center')
             # ticketTitle = ui.textarea("Update title.").classes(
             #     "w-10/12").style("padding-top: 1px")
             ticketDesc = ui.textarea("Update description.").classes(
@@ -297,15 +295,28 @@ def nonadmin_ticket_view_info():
 
 @ui.page('/admin_page')
 def admin_page():
-    ui.label("This is the admin view.")
-    ui.button("Logout", on_click=lambda: ui.open(login_page))
-    ui.button("View Created Tickets", on_click=lambda: ui.open(
-        admin_ticket_view_list))
+    ui.query('body').style(
+        'background: rgb(242,125,119); background: linear-gradient(31deg, rgba(242,125,119,1) 0%, rgba(244,122,77,1) 30%, rgba(235,225,150,1) 70%, rgba(214,130,32,1) 99%);')
+
+    ui.button("Logout", on_click=lambda: ui.open(
+        login_page), icon="logout", color="red")
+    with ui.row().classes('w-full justify-center'):
+        with ui.column().classes('w-full items-center'):
+            ui.label("Hello " + str(username) +
+                     "!").style("font-size: 40px; font-weight: bold")
+            ui.label("Please select from the options below.").style(
+                "font-size: 25px;")
+            ui.button("View Created Tickets", on_click=lambda: ui.open(
+                admin_ticket_view_list), color="orange", icon="search").classes("py-2 px-4 rounded-full")
 
 
 @ui.page("/admin_ticket_view_list")
 def admin_ticket_view_list():
-    ui.button("Go back", on_click=lambda: ui.open(admin_page))
+    ui.query('body').style(
+        'background: rgb(242,125,119); background: linear-gradient(31deg, rgba(242,125,119,1) 0%, rgba(244,122,77,1) 30%, rgba(235,225,150,1) 70%, rgba(214,130,32,1) 99%);')
+
+    ui.button("Go back", on_click=lambda: ui.open(
+        admin_page), color="red", icon="arrow_back")
 
     global username
 
@@ -313,7 +324,8 @@ def admin_ticket_view_list():
     df_tickets = pd.read_sql_query(
         "SELECT TicketNumber,Title from Tickets", db_tickets)
 
-    grid = ui.aggrid.from_pandas(df_tickets).classes('max-h-40')
+    grid = ui.aggrid.from_pandas(df_tickets).classes('max-h-40').classes(
+        'max-h-40 max-w-99')
     grid.set_visibility(True)
 
     ticketNumbersSqlQueryGet = pd.read_sql_query(
@@ -326,14 +338,20 @@ def admin_ticket_view_list():
             ticketNumbersSqlQueryGet.at[i, 'TicketNumber'])
 
     global queriedTicketNumber
-    ui.label(
-        "Select the ticket from the dropdown to see more information on it.")
-    queriedTicketNumber = ui.select(options=arrayOfTicketNumbers,
-                                    on_change=lambda: ui.open(admin_ticket_view_info))
+    with ui.row().classes('w-full justify-center'):
+        with ui.column().classes('w-full items-center'):
+            ui.label(
+                "Select the ticket from the dropdown to see more information on it, or to update it.").style(
+                "font-size: 19px; font-weight: bold")
+            queriedTicketNumber = ui.select(options=arrayOfTicketNumbers,
+                                            on_change=lambda: ui.open(admin_ticket_view_info))
 
 
 @ui.page("/admin_ticket_view_info")
 def admin_ticket_view_info():
+    ui.query('body').style(
+        'background: rgb(242,125,119); background: linear-gradient(31deg, rgba(242,125,119,1) 0%, rgba(244,122,77,1) 30%, rgba(235,225,150,1) 70%, rgba(214,130,32,1) 99%);')
+
     global queriedTicketNumber
 
     print("Showing Ticket " + str(queriedTicketNumber.value) + ".")
@@ -374,9 +392,11 @@ def admin_ticket_view_info():
         "SELECT Title FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
 
     ui.query('.nicegui-content').style('display: inline; padding: 0px')
-    ui.button("Go back", on_click=lambda: ui.open(admin_ticket_view_list))
 
-    with ui.row().classes('border-4 border-indigo-600 justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
+    ui.button("Go back", on_click=lambda: ui.open(
+        admin_ticket_view_list), color="red", icon="arrow_back")
+
+    with ui.row().classes('border-2 border-red-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
         ui.label("Ticket #" + str(ticketNumber))
         ui.label("Ticket Title: " + ticketTitle.at[0, "Title"])
         ui.label("Last Updated: " + ticketTimestamp.at[0, "Timestamp"])
@@ -384,44 +404,52 @@ def admin_ticket_view_info():
         ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"])
         ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
 
-    with ui.column().classes('border-4 border-indigo-600 justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
+    with ui.column().classes('border-2 border-red-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
         ui.label("Current Ticket Description: ")
         ui.label(ticketDesc.at[0, "Description"])
 
-    # Ticket History
-    ui.label("History of Ticket").style(
-        'color: red; font-weight: bold; text-align: center')
+    with ui.column().classes('justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
+        ui.button("Toggle History", color="red", icon="history", on_click=lambda: createHistory(
+        )).style('font-weight: bold; text-align: center')
 
-    for i in range(0, len(ticketHistoryDesc), 1):
-        ui.label("Ticket Description at " +
-                 ticketHistoryTimestamp.at[i, "Timestamp"] + " by " + ticketHistoryUpdater.at[i, "Updater"] + " with title " + ticketHistoryTitle.at[i, "Title"]).style('text-align: center; padding: 20px')
-        ui.label(ticketHistoryDesc.at[i, "Description"]).style(
-            'text-align: center; padding: 20px')
+    container = ui.row().classes('w-full justify-center')
+
+    def createHistory():
+        if len(list(container)) > 0:
+            print("clear")
+            container.clear()
+        else:
+            print("fill")
+            with container:
+                with ui.column().classes('w-max items-center border-2 border-red-600 justify-center items-center .p-12 rounded-lg').style("background-color: white;"):
+                    for i in range(0, len(ticketHistoryDesc), 1):
+                        ui.label("Ticket Description at " +
+                                 ticketHistoryTimestamp.at[i, "Timestamp"] + " by " + ticketHistoryUpdater.at[i, "Updater"] + " with title " + ticketHistoryTitle.at[i, "Title"]).style('text-align: center; padding: 20px')
+                        ui.label(ticketHistoryDesc.at[i, "Description"]).style(
+                            'text-align: center; padding: 20px')
 
     arrayOfAssignees = []
     for i in range(0, len(elevatedUserGet), 1):
         arrayOfAssignees.append(
             elevatedUserGet.at[i, 'Username'])
 
-    ui.label("Modify Ticket").style(
-        'color: red; font-weight: bold; text-align: center')
-
     # Default to first possible assignee in case of anything...
     selectedAssignee = arrayOfAssignees[0]
     arrayOfStatuses = ["Open", "Resolved", "On Hold"]
     selectedStatus = arrayOfStatuses[0]
 
-    with ui.column().classes('border-4 border-indigo-600 justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
-        ui.label("Update Assignee")
+    with ui.column().classes('border-2 border-red-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
+        ui.label("Update Assignee").style("font-size: 20px")
         selectedAssignee = ui.select(options=arrayOfAssignees, value=arrayOfAssignees[0],
                                      on_change=lambda: print("user selected")).classes('w-max')
-        ui.label("Update Status")
+        ui.label("Update Status").style("font-size: 20px")
         selectedStatus = ui.select(options=arrayOfStatuses, value=arrayOfStatuses[0],
                                    on_change=lambda: print("status selected")).classes('w-max')
-        ticketTitle = ui.textarea("Update title.").classes('w-full')
+        ticketTitle = ui.textarea(
+            "Update title.").classes('w-full')
         ticketDesc = ui.textarea("Update description.").classes('w-full')
-        ui.button("Submit", on_click=lambda: updateTicket()
-                  ).classes('w-6/12')
+        ui.button("Submit", on_click=lambda: updateTicket(),
+                  color="green", icon="done").style("margin-bottom: 20px")
 
     def updateTicket():
         global username
