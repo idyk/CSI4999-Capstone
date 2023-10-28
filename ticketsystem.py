@@ -16,16 +16,18 @@ def login_page():
     with ui.row().classes('w-full justify-center'):
         with ui.column().classes('w-full items-center'):
             ui.query('body').style(
-                'background-image: linear-gradient(to right, #6495ED, #00FFFF);')
-            ui.label("Welcome to Ticket System! (name pending)").style(
-                'color: white')
-            ui.label("Please login with your credentials.").style(
+                'background-image: linear-gradient(to right, #6495ED, #00FFFF); font-family: Sans-serif')
+            ui.label("Welcome to TICKSTER").style(
+                'color: white; font-size: 40px; font-weight: bold; -webkit-text-stroke-width: 2px; -webkit-text-stroke-color: black;')
+            ui.label("Please login with your credentials to access the system.").style(
                 'color: white')
 
-            username = ui.input(label="Username")
-            password = ui.input(label="Password")
+            username = ui.input(label="Username").style("width: 12%")
+            password = ui.input(label="Password", password=True,
+                                ).style("width: 12%")
 
-            ui.button("Sign in", on_click=lambda: attemptLogin())
+            ui.button("Sign in", on_click=lambda: attemptLogin(
+            ), color="green", icon="how_to_reg").classes("py-2 px-4 rounded-full")
 
     # This checks the username and password against the login database for validation. It will also check if the user is elevated or not to
     # direct them to the correct set of pages.
@@ -61,11 +63,23 @@ def setUsername(user):
 
 @ui.page('/nonadmin_page')
 def nonadmin_page():
-    ui.label("This is the nonadmin view.")
-    ui.button("Logout", on_click=lambda: ui.open(login_page))
-    ui.button("Create Ticket", on_click=lambda: ui.open(nonadmin_ticket_create))
-    ui.button("View Created Tickets", on_click=lambda: ui.open(
-        nonadmin_ticket_view_list))
+    ui.query('body').style(
+        ' background: rgb(199,233,191); background: linear-gradient(31deg, rgba(199,233,191,1) 0%, rgba(236,241,162,1) 30%, rgba(116,245,195,1) 65%, rgba(0,254,255,1) 98%); ;')
+
+    ui.button("Logout", on_click=lambda: ui.open(
+        login_page), icon="logout", color="red")
+    with ui.row().classes('w-full justify-center'):
+        with ui.column().classes('w-full items-center'):
+            ui.label("Hello " + str(username) +
+                     "!").style("font-size: 40px; font-weight: bold")
+            ui.label("Please select from the options below.").style(
+                "font-size: 25px;")
+
+            ui.button("Create Ticket", on_click=lambda: ui.open(
+                nonadmin_ticket_create), color="green", icon="edit").classes("py-2 px-4 rounded-full")
+            ui.button("View Created Tickets", on_click=lambda: ui.open(
+                nonadmin_ticket_view_list), color="orange", icon="search").classes("py-2 px-4 rounded-full")
+
 
 # Creating a ticket as a nonadmin page. Lets user type title and issue, and then when they submit,
 # it will auto generate the next ticket number, as well as a timestamp.
@@ -74,14 +88,20 @@ def nonadmin_page():
 
 @ui.page("/nonadmin_ticket_create")
 def nonadmin_ticket_create():
+    ui.query('body').style(
+        ' background: rgb(199,233,191); background: linear-gradient(31deg, rgba(199,233,191,1) 0%, rgba(236,241,162,1) 30%, rgba(116,245,195,1) 65%, rgba(0,254,255,1) 98%); ;')
 
-    ui.button("Go back", on_click=lambda: ui.open(nonadmin_page))
-    ui.label("Nonadmin - Create Ticket")
-    ui.label("Title:")
-    ticketTitle = ui.textarea("Enter your issue's title here.")
-    ui.label("Issue:")
-    ticketDesc = ui.textarea("Enter your issue's description here.")
-    ui.button("Submit", on_click=lambda: submitTicket())
+    ui.button("Go back", on_click=lambda: ui.open(
+        nonadmin_page), color="red", icon="arrow_back")
+    with ui.row().classes('w-full justify-center'):
+        with ui.column().classes('w-full items-center'):
+            ui.label("Create your ticket, " + str(username) + "!")
+            ticketTitle = ui.textarea(
+                "Enter your issue's title here.").classes("w-10/12").style("padding-top: 1px")
+            ticketDesc = ui.textarea(
+                "Enter your issue's description here.").classes("w-10/12").style("padding-top: 1px")
+            ui.button("Submit", on_click=lambda: submitTicket(
+            ), color="green", icon="check").classes("py-2 px-4 rounded-full")
 
     def submitTicket():
         global username
@@ -97,6 +117,7 @@ def nonadmin_ticket_create():
             "%b %d %Y") + " at " + ticketTimeStamp.strftime("%H") + ":" + ticketTimeStamp.strftime("%M")
         print(realTicketTimeStamp)
         cursor = db_tickets.cursor()
+
         cursor.execute("INSERT INTO Tickets (TicketNumber, Title, Description, Timestamp, Assignee, Status, User) VALUES ('" + str(indexToUse) +
                        "', '" + str(ticketTitle.value) + "', '" + str(ticketDesc.value) + "', '" + str(realTicketTimeStamp) + "', 'No Assignee', 'Open', '" + username + "')")
         db_tickets.commit()
@@ -121,7 +142,11 @@ def nonadmin_ticket_create():
 
 @ui.page("/nonadmin_ticket_view_list")
 def nonadmin_ticket_view_list():
-    ui.button("Go back", on_click=lambda: ui.open(nonadmin_page))
+    ui.query('body').style(
+        ' background: rgb(199,233,191); background: linear-gradient(31deg, rgba(199,233,191,1) 0%, rgba(236,241,162,1) 30%, rgba(116,245,195,1) 65%, rgba(0,254,255,1) 98%); ;')
+
+    ui.button("Go back", on_click=lambda: ui.open(
+        nonadmin_page), color="red", icon="arrow_back")
 
     global username
 
