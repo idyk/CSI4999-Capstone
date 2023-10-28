@@ -154,7 +154,8 @@ def nonadmin_ticket_view_list():
     df_tickets = pd.read_sql_query(
         "SELECT TicketNumber,Title from Tickets WHERE User = '" + username + "'", db_tickets)
 
-    grid = ui.aggrid.from_pandas(df_tickets).classes('max-h-40')
+    grid = ui.aggrid.from_pandas(df_tickets).classes(
+        'max-h-40 max-w-99')
     grid.set_visibility(True)
 
     ticketNumbersSqlQueryGet = pd.read_sql_query(
@@ -169,16 +170,22 @@ def nonadmin_ticket_view_list():
             ticketNumbersSqlQueryGet.at[i, 'TicketNumber'])
 
     global queriedTicketNumber
-    ui.label(
-        "Select the ticket from the dropdown to see more information on it.")
-    queriedTicketNumber = ui.select(options=arrayOfTicketNumbers,
-                                    on_change=lambda: ui.open(nonadmin_ticket_view_info))
+    with ui.row().classes('w-full justify-center'):
+        with ui.column().classes('w-full items-center'):
+            ui.label(
+                "Select the ticket from the dropdown to see more information on it, or to update it.").style(
+                "font-size: 19px; font-weight: bold")
+            queriedTicketNumber = ui.select(options=arrayOfTicketNumbers,
+                                            on_change=lambda: ui.open(nonadmin_ticket_view_info))
 
 # This will show further information. There is also another button to view even more details.
 
 
 @ui.page("/nonadmin_ticket_view_info")
 def nonadmin_ticket_view_info():
+    ui.query('body').style(
+        ' background: rgb(199,233,191); background: linear-gradient(31deg, rgba(199,233,191,1) 0%, rgba(236,241,162,1) 30%, rgba(116,245,195,1) 65%, rgba(0,254,255,1) 98%); ;')
+
     global queriedTicketNumber
     print("Showing Ticket " + str(queriedTicketNumber.value) + ".")
     ticketNumber = queriedTicketNumber.value
@@ -205,9 +212,10 @@ def nonadmin_ticket_view_info():
 
     ui.query('.nicegui-content').style('display: inline; padding: 0px')
 
-    ui.button("Go back", on_click=lambda: ui.open(nonadmin_ticket_view_list))
+    ui.button("Go back", on_click=lambda: ui.open(
+        nonadmin_ticket_view_list), color="red", icon="arrow_back")
 
-    with ui.row().classes('border-4 border-indigo-600 justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
+    with ui.row().classes('border-2 border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
         ui.label("Ticket #" + str(ticketNumber))
         ui.label("Ticket Title: " + ticketTitle.at[0, "Title"])
         ui.label("Last Updated: " + ticketTimestamp.at[0, "Timestamp"])
@@ -215,42 +223,56 @@ def nonadmin_ticket_view_info():
         ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"])
         ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
 
-    with ui.column().classes('border-4 border-indigo-600 justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
+    with ui.column().classes('border-2 border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
         ui.label("Current Ticket Description: ")
         ui.label(ticketDesc.at[0, "Description"])
 
-    # Ticket History
-    ui.label("History of Ticket").style(
-        'color: red; font-weight: bold; text-align: center')
+    with ui.column().classes('justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
+        ui.button("Toggle History", color="red", icon="history", on_click=lambda: createHistory(
+        )).style('font-weight: bold; text-align: center')
 
-    for i in range(0, len(ticketHistoryDesc), 1):
-        ui.label("Ticket Description at " +
-                 ticketHistoryTimestamp.at[i, "Timestamp"] + " by " + ticketHistoryUpdater.at[i, "Updater"] + " with title " + ticketHistoryTitle.at[i, "Title"]).style('text-align: center; padding: 20px')
-        ui.label(ticketHistoryDesc.at[i, "Description"]).style(
-            'text-align: center; padding: 20px')
+    container = ui.row().classes('w-full justify-center')
 
-    ui.button("View further information", on_click=lambda: ui.open(
-        nonadmin_ticket_view_more_info))
+    def createHistory():
+        if len(list(container)) > 0:
+            print("clear")
+            container.clear()
+        else:
+            print("fill")
+            with container:
+                with ui.column().classes('w-full items-center'):
+                    for i in range(0, len(ticketHistoryDesc), 1):
+                        ui.label("Ticket Description at " +
+                                 ticketHistoryTimestamp.at[i, "Timestamp"] + " by " + ticketHistoryUpdater.at[i, "Updater"] + " with title " + ticketHistoryTitle.at[i, "Title"]).style('text-align: center; padding: 20px')
+                        ui.label(ticketHistoryDesc.at[i, "Description"]).style(
+                            'text-align: center; padding: 20px')
 
-    ui.label("Modify Ticket").style(
-        'color: red; font-weight: bold; text-align: center')
-    ticketTitle = ui.textarea("Update title.")
-    ticketDesc = ui.textarea("Update description.")
-    ui.button("Submit", on_click=lambda: updateTicket())
+    with ui.row().classes('w-full justify-center'):
+        with ui.column().classes('w-full items-center'):
+            ui.label("You can modify your ticket's description below.").style(
+                'color: black; font-weight: bold; text-align: center')
+            # ticketTitle = ui.textarea("Update title.").classes(
+            #     "w-10/12").style("padding-top: 1px")
+            ticketDesc = ui.textarea("Update description.").classes(
+                "w-10/12").style("padding-top: 1px")
+            ui.button("Submit", on_click=lambda: updateTicket(),
+                      color="green", icon="done").style("margin-bottom: 20px")
+
+    ticketTitle = ticketTitle.at[0, "Title"]
 
     def updateTicket():
         global username
         indexToUse = ticketNumber
         print("Updating into index " + str(indexToUse) +
               " with the following information: ")
-        print(ticketTitle.value)
+        print(ticketTitle)
         print(ticketDesc.value)
         ticketTimeStamp = datetime.datetime.now()
         realTicketTimeStamp = ticketTimeStamp.strftime(
             "%b %d %Y") + " at " + ticketTimeStamp.strftime("%H") + ":" + ticketTimeStamp.strftime("%M")
         print(realTicketTimeStamp)
         cursor = db_tickets.cursor()
-        cursor.execute("UPDATE Tickets SET Title = '" + str(ticketTitle.value) + "', Description = '" + str(ticketDesc.value) + "', Assignee = '" + str(ticketAssignee.at[0, "Assignee"]) +
+        cursor.execute("UPDATE Tickets SET Title = '" + str(ticketTitle) + "', Description = '" + str(ticketDesc.value) + "', Assignee = '" + str(ticketAssignee.at[0, "Assignee"]) +
                        "', Status = 'Open', Timestamp = '" + str(realTicketTimeStamp) + "' WHERE TicketNumber = '" + str(ticketNumber) + "'")
         db_tickets.commit()
         cursor.close()
@@ -263,37 +285,15 @@ def nonadmin_ticket_view_info():
         print("HISTORY ID IS: " +
               str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]))
         cursor.execute("INSERT INTO TicketHistory (HistoryID, TicketNumber, Username, Assignee, Description, Timestamp, Updater, Title) VALUES ('" + str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]) +
-                       "', '" + str(ticketNumber) + "', '" + str(username) + "', '" + str(ticketAssignee.at[0, "Assignee"]) + "', '" + str(ticketDesc.value) + "', '" + str(realTicketTimeStamp) + "', '" + str(username) + "', '" + str(ticketTitle.value) + "')")
+                       "', '" + str(ticketNumber) + "', '" + str(username) + "', '" + str(ticketAssignee.at[0, "Assignee"]) + "', '" + str(ticketDesc.value) + "', '" + str(realTicketTimeStamp) + "', '" + str(username) + "', '" + str(ticketTitle) + "')")
 
         db_history.commit()
         cursor.close()
 
         ui.open(nonadmin_page)
 
-
-# This shows more information that isn't really needed to know for the user, but they may want to see it still.
-@ui.page("/nonadmin_ticket_view_more_info")
-def nonadmin_ticket_view_more_info():
-    ui.button("Go back", on_click=lambda: ui.open(nonadmin_ticket_view_info))
-
-    global queriedTicketNumber
-    ticketNumber = queriedTicketNumber.value
-
-    ticketTimestamp = pd.read_sql_query(
-        "SELECT Timestamp from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
-
-    ticketAssignee = pd.read_sql_query(
-        "SELECT Assignee from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
-
-    ticketStatus = pd.read_sql_query(
-        "SELECT Status from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
-
-    ui.label("Time Created: " + ticketTimestamp.at[0, "Timestamp"])
-    ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"])
-    ui.label("Ticket Staus: " + ticketStatus.at[0, "Status"])
-
-
 # ADMIN VIEW SECTION!!!!!!!!!
+
 
 @ui.page('/admin_page')
 def admin_page():
