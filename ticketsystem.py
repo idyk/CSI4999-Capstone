@@ -16,16 +16,18 @@ def login_page():
     with ui.row().classes('w-full justify-center'):
         with ui.column().classes('w-full items-center'):
             ui.query('body').style(
-                'background-image: linear-gradient(to right, #6495ED, #00FFFF);')
-            ui.label("Welcome to Ticket System! (name pending)").style(
-                'color: white')
-            ui.label("Please login with your credentials.").style(
+                'background-image: linear-gradient(to right, #6495ED, #00FFFF); font-family: Sans-serif')
+            ui.label("Welcome to TICKSTER").style(
+                'color: white; font-size: 40px; font-weight: bold; -webkit-text-stroke-width: 2px; -webkit-text-stroke-color: black;')
+            ui.label("Please login with your credentials to access the system.").style(
                 'color: white')
 
-            username = ui.input(label="Username")
-            password = ui.input(label="Password")
+            username = ui.input(label="Username").style("width: 12%")
+            password = ui.input(label="Password", password=True,
+                                ).style("width: 12%")
 
-            ui.button("Sign in", on_click=lambda: attemptLogin())
+            ui.button("Sign in", on_click=lambda: attemptLogin(
+            ), color="green", icon="how_to_reg").classes("py-2 px-4 rounded-full")
 
     # This checks the username and password against the login database for validation. It will also check if the user is elevated or not to
     # direct them to the correct set of pages.
@@ -61,11 +63,23 @@ def setUsername(user):
 
 @ui.page('/nonadmin_page')
 def nonadmin_page():
-    ui.label("This is the nonadmin view.")
-    ui.button("Logout", on_click=lambda: ui.open(login_page))
-    ui.button("Create Ticket", on_click=lambda: ui.open(nonadmin_ticket_create))
-    ui.button("View Created Tickets", on_click=lambda: ui.open(
-        nonadmin_ticket_view_list))
+    ui.query('body').style(
+        ' background: rgb(199,233,191); background: linear-gradient(31deg, rgba(199,233,191,1) 0%, rgba(236,241,162,1) 30%, rgba(116,245,195,1) 65%, rgba(0,254,255,1) 98%); ;')
+
+    ui.button("Logout", on_click=lambda: ui.open(
+        login_page), icon="logout", color="red")
+    with ui.row().classes('w-full justify-center'):
+        with ui.column().classes('w-full items-center'):
+            ui.label("Hello " + str(username) +
+                     "!").style("font-size: 40px; font-weight: bold")
+            ui.label("Please select from the options below.").style(
+                "font-size: 25px;")
+
+            ui.button("Create Ticket", on_click=lambda: ui.open(
+                nonadmin_ticket_create), color="green", icon="edit").classes("py-2 px-4 rounded-full")
+            ui.button("View Created Tickets", on_click=lambda: ui.open(
+                nonadmin_ticket_view_list), color="orange", icon="search").classes("py-2 px-4 rounded-full")
+
 
 # Creating a ticket as a nonadmin page. Lets user type title and issue, and then when they submit,
 # it will auto generate the next ticket number, as well as a timestamp.
@@ -74,14 +88,20 @@ def nonadmin_page():
 
 @ui.page("/nonadmin_ticket_create")
 def nonadmin_ticket_create():
+    ui.query('body').style(
+        ' background: rgb(199,233,191); background: linear-gradient(31deg, rgba(199,233,191,1) 0%, rgba(236,241,162,1) 30%, rgba(116,245,195,1) 65%, rgba(0,254,255,1) 98%); ;')
 
-    ui.button("Go back", on_click=lambda: ui.open(nonadmin_page))
-    ui.label("Nonadmin - Create Ticket")
-    ui.label("Title:")
-    ticketTitle = ui.textarea("Enter your issue's title here.")
-    ui.label("Issue:")
-    ticketDesc = ui.textarea("Enter your issue's description here.")
-    ui.button("Submit", on_click=lambda: submitTicket())
+    ui.button("Go back", on_click=lambda: ui.open(
+        nonadmin_page), color="red", icon="arrow_back")
+    with ui.row().classes('w-full justify-center'):
+        with ui.column().classes('w-full items-center'):
+            ui.label("Create your ticket, " + str(username) + "!")
+            ticketTitle = ui.textarea(
+                "Enter your issue's title here.").classes("w-10/12").style("padding-top: 1px")
+            ticketDesc = ui.textarea(
+                "Enter your issue's description here.").classes("w-10/12").style("padding-top: 1px")
+            ui.button("Submit", on_click=lambda: submitTicket(
+            ), color="green", icon="check").classes("py-2 px-4 rounded-full")
 
     def submitTicket():
         global username
@@ -97,6 +117,7 @@ def nonadmin_ticket_create():
             "%b %d %Y") + " at " + ticketTimeStamp.strftime("%H") + ":" + ticketTimeStamp.strftime("%M")
         print(realTicketTimeStamp)
         cursor = db_tickets.cursor()
+
         cursor.execute("INSERT INTO Tickets (TicketNumber, Title, Description, Timestamp, Assignee, Status, User) VALUES ('" + str(indexToUse) +
                        "', '" + str(ticketTitle.value) + "', '" + str(ticketDesc.value) + "', '" + str(realTicketTimeStamp) + "', 'No Assignee', 'Open', '" + username + "')")
         db_tickets.commit()
@@ -121,7 +142,11 @@ def nonadmin_ticket_create():
 
 @ui.page("/nonadmin_ticket_view_list")
 def nonadmin_ticket_view_list():
-    ui.button("Go back", on_click=lambda: ui.open(nonadmin_page))
+    ui.query('body').style(
+        ' background: rgb(199,233,191); background: linear-gradient(31deg, rgba(199,233,191,1) 0%, rgba(236,241,162,1) 30%, rgba(116,245,195,1) 65%, rgba(0,254,255,1) 98%); ;')
+
+    ui.button("Go back", on_click=lambda: ui.open(
+        nonadmin_page), color="red", icon="arrow_back")
 
     global username
 
@@ -129,7 +154,8 @@ def nonadmin_ticket_view_list():
     df_tickets = pd.read_sql_query(
         "SELECT TicketNumber,Title from Tickets WHERE User = '" + username + "'", db_tickets)
 
-    grid = ui.aggrid.from_pandas(df_tickets).classes('max-h-40')
+    grid = ui.aggrid.from_pandas(df_tickets).classes(
+        'max-h-40 max-w-99')
     grid.set_visibility(True)
 
     ticketNumbersSqlQueryGet = pd.read_sql_query(
@@ -144,16 +170,22 @@ def nonadmin_ticket_view_list():
             ticketNumbersSqlQueryGet.at[i, 'TicketNumber'])
 
     global queriedTicketNumber
-    ui.label(
-        "Select the ticket from the dropdown to see more information on it.")
-    queriedTicketNumber = ui.select(options=arrayOfTicketNumbers,
-                                    on_change=lambda: ui.open(nonadmin_ticket_view_info))
+    with ui.row().classes('w-full justify-center'):
+        with ui.column().classes('w-full items-center'):
+            ui.label(
+                "Select the ticket from the dropdown to see more information on it, or to update it.").style(
+                "font-size: 19px; font-weight: bold")
+            queriedTicketNumber = ui.select(options=arrayOfTicketNumbers,
+                                            on_change=lambda: ui.open(nonadmin_ticket_view_info))
 
 # This will show further information. There is also another button to view even more details.
 
 
 @ui.page("/nonadmin_ticket_view_info")
 def nonadmin_ticket_view_info():
+    ui.query('body').style(
+        ' background: rgb(199,233,191); background: linear-gradient(31deg, rgba(199,233,191,1) 0%, rgba(236,241,162,1) 30%, rgba(116,245,195,1) 65%, rgba(0,254,255,1) 98%); ;')
+
     global queriedTicketNumber
     print("Showing Ticket " + str(queriedTicketNumber.value) + ".")
     ticketNumber = queriedTicketNumber.value
@@ -180,9 +212,10 @@ def nonadmin_ticket_view_info():
 
     ui.query('.nicegui-content').style('display: inline; padding: 0px')
 
-    ui.button("Go back", on_click=lambda: ui.open(nonadmin_ticket_view_list))
+    ui.button("Go back", on_click=lambda: ui.open(
+        nonadmin_ticket_view_list), color="red", icon="arrow_back")
 
-    with ui.row().classes('border-4 border-indigo-600 justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
+    with ui.row().classes('border-2 border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
         ui.label("Ticket #" + str(ticketNumber))
         ui.label("Ticket Title: " + ticketTitle.at[0, "Title"])
         ui.label("Last Updated: " + ticketTimestamp.at[0, "Timestamp"])
@@ -190,42 +223,54 @@ def nonadmin_ticket_view_info():
         ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"])
         ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
 
-    with ui.column().classes('border-4 border-indigo-600 justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
+    with ui.column().classes('border-2 border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
         ui.label("Current Ticket Description: ")
         ui.label(ticketDesc.at[0, "Description"])
 
-    # Ticket History
-    ui.label("History of Ticket").style(
-        'color: red; font-weight: bold; text-align: center')
+    with ui.column().classes('justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
+        ui.button("Toggle History", color="red", icon="history", on_click=lambda: createHistory(
+        )).style('font-weight: bold; text-align: center')
 
-    for i in range(0, len(ticketHistoryDesc), 1):
-        ui.label("Ticket Description at " +
-                 ticketHistoryTimestamp.at[i, "Timestamp"] + " by " + ticketHistoryUpdater.at[i, "Updater"] + " with title " + ticketHistoryTitle.at[i, "Title"]).style('text-align: center; padding: 20px')
-        ui.label(ticketHistoryDesc.at[i, "Description"]).style(
-            'text-align: center; padding: 20px')
+    container = ui.row().classes('w-full justify-center')
 
-    ui.button("View further information", on_click=lambda: ui.open(
-        nonadmin_ticket_view_more_info))
+    def createHistory():
+        if len(list(container)) > 0:
+            print("clear")
+            container.clear()
+        else:
+            print("fill")
+            with container:
+                with ui.column().classes('w-max items-center border-2 border-indigo-600 justify-center items-center .p-12 rounded-lg').style("background-color: white;"):
+                    for i in range(0, len(ticketHistoryDesc), 1):
+                        ui.label("Ticket Description at " +
+                                 ticketHistoryTimestamp.at[i, "Timestamp"] + " by " + ticketHistoryUpdater.at[i, "Updater"] + " with title " + ticketHistoryTitle.at[i, "Title"]).style('text-align: center; padding: 20px')
+                        ui.label(ticketHistoryDesc.at[i, "Description"]).style(
+                            'text-align: center; padding: 20px')
 
-    ui.label("Modify Ticket").style(
-        'color: red; font-weight: bold; text-align: center')
-    ticketTitle = ui.textarea("Update title.")
-    ticketDesc = ui.textarea("Update description.")
-    ui.button("Submit", on_click=lambda: updateTicket())
+    with ui.row().classes('w-full justify-center'):
+        with ui.column().classes('w-full items-center'):
+            # ticketTitle = ui.textarea("Update title.").classes(
+            #     "w-10/12").style("padding-top: 1px")
+            ticketDesc = ui.textarea("Update description.").classes(
+                "w-10/12").style("padding-top: 1px")
+            ui.button("Submit", on_click=lambda: updateTicket(),
+                      color="green", icon="done").style("margin-bottom: 20px")
+
+    ticketTitle = ticketTitle.at[0, "Title"]
 
     def updateTicket():
         global username
         indexToUse = ticketNumber
         print("Updating into index " + str(indexToUse) +
               " with the following information: ")
-        print(ticketTitle.value)
+        print(ticketTitle)
         print(ticketDesc.value)
         ticketTimeStamp = datetime.datetime.now()
         realTicketTimeStamp = ticketTimeStamp.strftime(
             "%b %d %Y") + " at " + ticketTimeStamp.strftime("%H") + ":" + ticketTimeStamp.strftime("%M")
         print(realTicketTimeStamp)
         cursor = db_tickets.cursor()
-        cursor.execute("UPDATE Tickets SET Title = '" + str(ticketTitle.value) + "', Description = '" + str(ticketDesc.value) + "', Assignee = '" + str(ticketAssignee.at[0, "Assignee"]) +
+        cursor.execute("UPDATE Tickets SET Title = '" + str(ticketTitle) + "', Description = '" + str(ticketDesc.value) + "', Assignee = '" + str(ticketAssignee.at[0, "Assignee"]) +
                        "', Status = 'Open', Timestamp = '" + str(realTicketTimeStamp) + "' WHERE TicketNumber = '" + str(ticketNumber) + "'")
         db_tickets.commit()
         cursor.close()
@@ -238,49 +283,86 @@ def nonadmin_ticket_view_info():
         print("HISTORY ID IS: " +
               str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]))
         cursor.execute("INSERT INTO TicketHistory (HistoryID, TicketNumber, Username, Assignee, Description, Timestamp, Updater, Title) VALUES ('" + str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]) +
-                       "', '" + str(ticketNumber) + "', '" + str(username) + "', '" + str(ticketAssignee.at[0, "Assignee"]) + "', '" + str(ticketDesc.value) + "', '" + str(realTicketTimeStamp) + "', '" + str(username) + "', '" + str(ticketTitle.value) + "')")
+                       "', '" + str(ticketNumber) + "', '" + str(username) + "', '" + str(ticketAssignee.at[0, "Assignee"]) + "', '" + str(ticketDesc.value) + "', '" + str(realTicketTimeStamp) + "', '" + str(username) + "', '" + str(ticketTitle) + "')")
 
         db_history.commit()
         cursor.close()
 
         ui.open(nonadmin_page)
 
-
-# This shows more information that isn't really needed to know for the user, but they may want to see it still.
-@ui.page("/nonadmin_ticket_view_more_info")
-def nonadmin_ticket_view_more_info():
-    ui.button("Go back", on_click=lambda: ui.open(nonadmin_ticket_view_info))
-
-    global queriedTicketNumber
-    ticketNumber = queriedTicketNumber.value
-
-    ticketTimestamp = pd.read_sql_query(
-        "SELECT Timestamp from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
-
-    ticketAssignee = pd.read_sql_query(
-        "SELECT Assignee from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
-
-    ticketStatus = pd.read_sql_query(
-        "SELECT Status from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
-
-    ui.label("Time Created: " + ticketTimestamp.at[0, "Timestamp"])
-    ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"])
-    ui.label("Ticket Staus: " + ticketStatus.at[0, "Status"])
-
-
 # ADMIN VIEW SECTION!!!!!!!!!
+
 
 @ui.page('/admin_page')
 def admin_page():
-    ui.label("This is the admin view.")
-    ui.button("Logout", on_click=lambda: ui.open(login_page))
-    ui.button("View Created Tickets", on_click=lambda: ui.open(
-        admin_ticket_view_list))
+    ui.query('body').style(
+        'background: rgb(242,125,119); background: linear-gradient(31deg, rgba(242,125,119,1) 0%, rgba(244,122,77,1) 30%, rgba(235,225,150,1) 70%, rgba(214,130,32,1) 99%);')
+
+    ui.button("Logout", on_click=lambda: ui.open(
+        login_page), icon="logout", color="red")
+    with ui.row().classes('w-full justify-center'):
+        with ui.column().classes('w-full items-center'):
+            ui.label("Hello " + str(username) +
+                     "!").style("font-size: 40px; font-weight: bold")
+            ui.label("Please select from the options below.").style(
+                "font-size: 25px;")
+            ui.button("View Created Tickets", on_click=lambda: ui.open(
+                admin_ticket_view_list), color="orange", icon="search").classes("py-2 px-4 rounded-full")
+            ui.button("Create A User", on_click=lambda: ui.open(
+                admin_create_user), color="pink", icon="add").classes("py-2 px-4 rounded-full")
+
+
+@ui.page("/admin_create_user")
+def admin_create_user():
+    ui.query('body').style(
+        'background: rgb(242,125,119); background: linear-gradient(31deg, rgba(242,125,119,1) 0%, rgba(244,122,77,1) 30%, rgba(235,225,150,1) 70%, rgba(214,130,32,1) 99%);')
+
+    ui.button("Go back", on_click=lambda: ui.open(
+        admin_page), color="red", icon="arrow_back")
+    with ui.row().classes('w-2/3 border-2 border-red-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin-left: auto; margin-right: auto; background-color: white'):
+        with ui.column().classes('w-full items-center'):
+            newUsername = ui.input(
+                "Create username.").classes('w-50 items-center').style("text-align: center")
+            newPassword = ui.input(
+                "Create password.").classes('w-50')
+            ui.label("Elevated?")
+            elevationStatus = ui.select(options=["False", "True"])
+            ui.button("Create User", on_click=lambda: generateUser(
+                newUsername.value, newPassword.value, elevationStatus.value), color="green", icon="add_circle")
+
+    def generateUser(usernameInput, passwordInput, elevationInput):
+
+        checkUniqueUsername = pd.read_sql_query(
+            "SELECT EXISTS(SELECT * FROM Logins WHERE Username = '" + str(usernameInput) + "')", db_login)
+
+        if checkUniqueUsername.at[0, "EXISTS(SELECT * FROM Logins WHERE Username = '" + str(usernameInput) + "')"] == 1:
+            print("Username already exists")
+            ui.notify("Username already exists.")
+
+        else:
+            cursor = db_login.cursor()
+            userID = pd.read_sql_query(
+                "SELECT MAX(UserID) FROM Logins", db_login)
+            userID += 1
+
+            print("NEW USER ID IS: " +
+                  str(userID.at[0, "MAX(UserID)"]))
+
+            print("New username is " + str(usernameInput))
+            cursor.execute("INSERT INTO Logins (UserID, Username, Password, Elevated) VALUES ('" + str(userID.at[0, "MAX(UserID)"]) +
+                           "', '" + str(usernameInput) + "', '" + str(passwordInput) + "', '" + str(elevationInput) + "')")
+            db_login.commit()
+            cursor.close()
+            ui.open(admin_page)
 
 
 @ui.page("/admin_ticket_view_list")
 def admin_ticket_view_list():
-    ui.button("Go back", on_click=lambda: ui.open(admin_page))
+    ui.query('body').style(
+        'background: rgb(242,125,119); background: linear-gradient(31deg, rgba(242,125,119,1) 0%, rgba(244,122,77,1) 30%, rgba(235,225,150,1) 70%, rgba(214,130,32,1) 99%);')
+
+    ui.button("Go back", on_click=lambda: ui.open(
+        admin_page), color="red", icon="arrow_back")
 
     global username
 
@@ -288,7 +370,8 @@ def admin_ticket_view_list():
     df_tickets = pd.read_sql_query(
         "SELECT TicketNumber,Title from Tickets", db_tickets)
 
-    grid = ui.aggrid.from_pandas(df_tickets).classes('max-h-40')
+    grid = ui.aggrid.from_pandas(df_tickets).classes('max-h-40').classes(
+        'max-h-40 max-w-99')
     grid.set_visibility(True)
 
     ticketNumbersSqlQueryGet = pd.read_sql_query(
@@ -301,14 +384,20 @@ def admin_ticket_view_list():
             ticketNumbersSqlQueryGet.at[i, 'TicketNumber'])
 
     global queriedTicketNumber
-    ui.label(
-        "Select the ticket from the dropdown to see more information on it.")
-    queriedTicketNumber = ui.select(options=arrayOfTicketNumbers,
-                                    on_change=lambda: ui.open(admin_ticket_view_info))
+    with ui.row().classes('w-full justify-center'):
+        with ui.column().classes('w-full items-center'):
+            ui.label(
+                "Select the ticket from the dropdown to see more information on it, or to update it.").style(
+                "font-size: 19px; font-weight: bold")
+            queriedTicketNumber = ui.select(options=arrayOfTicketNumbers,
+                                            on_change=lambda: ui.open(admin_ticket_view_info))
 
 
 @ui.page("/admin_ticket_view_info")
 def admin_ticket_view_info():
+    ui.query('body').style(
+        'background: rgb(242,125,119); background: linear-gradient(31deg, rgba(242,125,119,1) 0%, rgba(244,122,77,1) 30%, rgba(235,225,150,1) 70%, rgba(214,130,32,1) 99%);')
+
     global queriedTicketNumber
 
     print("Showing Ticket " + str(queriedTicketNumber.value) + ".")
@@ -349,9 +438,11 @@ def admin_ticket_view_info():
         "SELECT Title FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
 
     ui.query('.nicegui-content').style('display: inline; padding: 0px')
-    ui.button("Go back", on_click=lambda: ui.open(admin_ticket_view_list))
 
-    with ui.row().classes('border-4 border-indigo-600 justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
+    ui.button("Go back", on_click=lambda: ui.open(
+        admin_ticket_view_list), color="red", icon="arrow_back")
+
+    with ui.row().classes('border-2 border-red-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
         ui.label("Ticket #" + str(ticketNumber))
         ui.label("Ticket Title: " + ticketTitle.at[0, "Title"])
         ui.label("Last Updated: " + ticketTimestamp.at[0, "Timestamp"])
@@ -359,44 +450,52 @@ def admin_ticket_view_info():
         ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"])
         ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
 
-    with ui.column().classes('border-4 border-indigo-600 justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
+    with ui.column().classes('border-2 border-red-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
         ui.label("Current Ticket Description: ")
         ui.label(ticketDesc.at[0, "Description"])
 
-    # Ticket History
-    ui.label("History of Ticket").style(
-        'color: red; font-weight: bold; text-align: center')
+    with ui.column().classes('justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
+        ui.button("Toggle History", color="red", icon="history", on_click=lambda: createHistory(
+        )).style('font-weight: bold; text-align: center')
 
-    for i in range(0, len(ticketHistoryDesc), 1):
-        ui.label("Ticket Description at " +
-                 ticketHistoryTimestamp.at[i, "Timestamp"] + " by " + ticketHistoryUpdater.at[i, "Updater"] + " with title " + ticketHistoryTitle.at[i, "Title"]).style('text-align: center; padding: 20px')
-        ui.label(ticketHistoryDesc.at[i, "Description"]).style(
-            'text-align: center; padding: 20px')
+    container = ui.row().classes('w-full justify-center')
+
+    def createHistory():
+        if len(list(container)) > 0:
+            print("clear")
+            container.clear()
+        else:
+            print("fill")
+            with container:
+                with ui.column().classes('w-max items-center border-2 border-red-600 justify-center items-center .p-12 rounded-lg').style("background-color: white;"):
+                    for i in range(0, len(ticketHistoryDesc), 1):
+                        ui.label("Ticket Description at " +
+                                 ticketHistoryTimestamp.at[i, "Timestamp"] + " by " + ticketHistoryUpdater.at[i, "Updater"] + " with title " + ticketHistoryTitle.at[i, "Title"]).style('text-align: center; padding: 20px')
+                        ui.label(ticketHistoryDesc.at[i, "Description"]).style(
+                            'text-align: center; padding: 20px')
 
     arrayOfAssignees = []
     for i in range(0, len(elevatedUserGet), 1):
         arrayOfAssignees.append(
             elevatedUserGet.at[i, 'Username'])
 
-    ui.label("Modify Ticket").style(
-        'color: red; font-weight: bold; text-align: center')
-
     # Default to first possible assignee in case of anything...
     selectedAssignee = arrayOfAssignees[0]
     arrayOfStatuses = ["Open", "Resolved", "On Hold"]
     selectedStatus = arrayOfStatuses[0]
 
-    with ui.column().classes('border-4 border-indigo-600 justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
-        ui.label("Update Assignee")
+    with ui.column().classes('border-2 border-red-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
+        ui.label("Update Assignee").style("font-size: 20px")
         selectedAssignee = ui.select(options=arrayOfAssignees, value=arrayOfAssignees[0],
                                      on_change=lambda: print("user selected")).classes('w-max')
-        ui.label("Update Status")
+        ui.label("Update Status").style("font-size: 20px")
         selectedStatus = ui.select(options=arrayOfStatuses, value=arrayOfStatuses[0],
                                    on_change=lambda: print("status selected")).classes('w-max')
-        ticketTitle = ui.textarea("Update title.").classes('w-full')
+        ticketTitle = ui.textarea(
+            "Update title.").classes('w-full')
         ticketDesc = ui.textarea("Update description.").classes('w-full')
-        ui.button("Submit", on_click=lambda: updateTicket()
-                  ).classes('w-6/12')
+        ui.button("Submit", on_click=lambda: updateTicket(),
+                  color="green", icon="done").style("margin-bottom: 20px")
 
     def updateTicket():
         global username
