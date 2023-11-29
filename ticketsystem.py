@@ -267,29 +267,30 @@ def nonadmin_ticket_view_list():
     df_tickets = pd.read_sql_query(
         "SELECT TicketNumber,Title from Tickets WHERE User = '" + username + "'", db_tickets)
 
-    grid = ui.aggrid.from_pandas(df_tickets).classes(
-        'max-h-40 max-w-99')
-    grid.set_visibility(True)
-
-    ticketNumbersSqlQueryGet = pd.read_sql_query(
-        "SELECT TicketNumber FROM Tickets WHERE User = '" + username + "'", db_tickets)
-
-    # This creates a dropdown for the user to pick from which ticket they would like to view further information on.
-    arrayOfTicketNumbers = []
-    for i in range(0, len(ticketNumbersSqlQueryGet), 1):
-        print("One of " + str(username) + "'s Ticket Numbers: " +
-              str(ticketNumbersSqlQueryGet.at[i, 'TicketNumber']))
-        arrayOfTicketNumbers.append(
-            ticketNumbersSqlQueryGet.at[i, 'TicketNumber'])
-
     global queriedTicketNumber
-    with ui.row().classes('w-full justify-center'):
-        with ui.column().classes('w-full items-center'):
-            ui.label(
-                "Select the ticket from the dropdown to see more information on it, or to update it.").style(
-                "font-size: 19px; font-weight: bold")
-            queriedTicketNumber = ui.select(options=arrayOfTicketNumbers,
-                                            on_change=lambda: ui.open(nonadmin_ticket_view_info))
+    queriedTicketNumber = [4] * 1
+
+    grid = ui.aggrid.from_pandas(df_tickets).classes('max-h-40').classes(
+        'max-h-40 max-w-99').on('cellClicked', lambda event: changeQueriedTicketNumber(int(f'{event.args["value"]}'))).on('cellClicked',  lambda event: ui.open(nonadmin_ticket_view_info))
+    grid.set_visibility(True)
+def changeQueriedTicketNumber(i):
+    queriedTicketNumber[0] = i
+    # This creates a dropdown for the user to pick from which ticket they would like to view further information on.
+#    arrayOfTicketNumbers = []
+#    for i in range(0, len(ticketNumbersSqlQueryGet), 1):
+#        print("One of " + str(username) + "'s Ticket Numbers: " +
+#              str(ticketNumbersSqlQueryGet.at[i, 'TicketNumber']))
+#        arrayOfTicketNumbers.append(
+#            ticketNumbersSqlQueryGet.at[i, 'TicketNumber'])
+
+#    global queriedTicketNumber
+#    with ui.row().classes('w-full justify-center'):
+#        with ui.column().classes('w-full items-center'):
+#            ui.label(
+#                "Select the ticket from the dropdown to see more information on it, or to update it.").style(
+#                "font-size: 19px; font-weight: bold")
+#            queriedTicketNumber = ui.select(options=arrayOfTicketNumbers,
+#                                            on_change=lambda: ui.open(nonadmin_ticket_view_info))
 
 # This will show further information. There is also another button to view even more details.
 
@@ -320,8 +321,8 @@ def nonadmin_ticket_view_info():
             """
     ui.html(backgroundHtml)
     global queriedTicketNumber
-    print("Showing Ticket " + str(queriedTicketNumber.value) + ".")
-    ticketNumber = queriedTicketNumber.value
+    print("Showing Ticket " + str(queriedTicketNumber[0]) + ".")
+    ticketNumber = queriedTicketNumber[0]
     ticketTitle = pd.read_sql_query(
         "SELECT Title from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
     ticketDesc = pd.read_sql_query(
@@ -571,28 +572,30 @@ def admin_ticket_view_list():
     df_tickets = pd.read_sql_query(
         "SELECT TicketNumber,Title from Tickets", db_tickets)
 
-    grid = ui.aggrid.from_pandas(df_tickets).classes('max-h-40').classes(
-        'max-h-40 max-w-99')
-    grid.set_visibility(True)
 
-    ticketNumbersSqlQueryGet = pd.read_sql_query(
-        "SELECT TicketNumber FROM Tickets", db_tickets)
+#    ticketNumbersSqlQueryGet = pd.read_sql_query(
+#        "SELECT TicketNumber FROM Tickets", db_tickets)
 
     # This creates a dropdown for the user to pick from which ticket they would like to view further information on.
-    arrayOfTicketNumbers = []
-    for i in range(0, len(ticketNumbersSqlQueryGet), 1):
-        arrayOfTicketNumbers.append(
-            ticketNumbersSqlQueryGet.at[i, 'TicketNumber'])
+#   arrayOfTicketNumbers = []
+#    for i in range(0, len(ticketNumbersSqlQueryGet), 1):
+#        arrayOfTicketNumbers.append(
+#            ticketNumbersSqlQueryGet.at[i, 'TicketNumber'])
 
+
+#    with ui.row().classes('w-full justify-center'):
+#        with ui.column().classes('w-full items-center'):
+#            ui.label(
+#                "Select the ticket from the dropdown to see more information on it, or to update it.").style(
+#                "font-size: 19px; font-weight: bold")
     global queriedTicketNumber
-    with ui.row().classes('w-full justify-center'):
-        with ui.column().classes('w-full items-center'):
-            ui.label(
-                "Select the ticket from the dropdown to see more information on it, or to update it.").style(
-                "font-size: 19px; font-weight: bold")
-            queriedTicketNumber = ui.select(options=arrayOfTicketNumbers,
-                                            on_change=lambda: ui.open(admin_ticket_view_info))
+    queriedTicketNumber = [4] * 1
 
+    grid = ui.aggrid.from_pandas(df_tickets).classes('max-h-40').classes(
+        'max-h-40 max-w-99').on('cellClicked', lambda event: changeQueriedTicketNumber(int(f'{event.args["value"]}'))).on('cellClicked',  lambda event: ui.open(admin_ticket_view_info))
+    grid.set_visibility(True)
+def changeQueriedTicketNumber(i):
+    queriedTicketNumber[0] = i
 
 @ui.page("/admin_ticket_view_info")
 def admin_ticket_view_info():
@@ -621,9 +624,9 @@ def admin_ticket_view_info():
     ui.html(backgroundHtml)
     global queriedTicketNumber
 
-    print("Showing Ticket " + str(queriedTicketNumber.value) + ".")
+    print("Showing Ticket " + str(queriedTicketNumber[0]) + ".")
 
-    ticketNumber = queriedTicketNumber.value
+    ticketNumber = queriedTicketNumber[0]
 
     elevatedUserGet = pd.read_sql_query(
         "SELECT Username FROM Logins WHERE Elevated = 'True'", db_login)
