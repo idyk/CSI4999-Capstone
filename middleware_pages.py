@@ -16,3 +16,9 @@ def open_nonadmin_page():
     from nonadmin import open_nonadmin
     print("opening nonadmin")
     open_nonadmin()
+
+
+def open_admin_page():
+    from admin import open_admin
+    print("opening admin")
+    open_admin()

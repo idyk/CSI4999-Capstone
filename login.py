@@ -3,6 +3,8 @@ import sqlite3
 import pandas as pd
 import datetime
 from middleware_pages import open_nonadmin_page
+from middleware_pages import open_admin_page
+
 from middleware_variables import setUsername
 
 db_tickets = sqlite3.connect(r'.\tickets.db')
@@ -85,6 +87,6 @@ def login_page():
                         open_nonadmin_page()
                     else:
                         pass
-                        # admin_page()
+                        open_admin_page()
         except:
             ui.notify("Invalid login.", type="negative", position="top")

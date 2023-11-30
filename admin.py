@@ -3,10 +3,20 @@ import sqlite3
 import pandas as pd
 import datetime
 from login import *
+from middleware_pages import open_login_page
+from middleware_variables import getUsername
 
 db_tickets = sqlite3.connect(r'.\tickets.db')
 db_login = sqlite3.connect(r'.\login.db')
 db_history = sqlite3.connect(r'.\history.db')
+
+
+username = getUsername()
+
+
+def open_admin():
+    print("open nonadmin")
+    ui.open(admin_page)
 
 
 @ui.page('/admin_page')
@@ -35,8 +45,8 @@ def admin_page():
             """
     ui.html(backgroundHtml)
 
-    ui.button("Logout", on_click=lambda: ui.open(
-        login_page), icon="logout", color="red")
+    ui.button("Logout", on_click=lambda: open_login_page(),
+              icon="logout", color="red")
     with ui.row().classes('w-full justify-center'):
         with ui.column().classes('w-full items-center'):
             ui.label("Hello " + str(username) +
@@ -141,8 +151,6 @@ def admin_ticket_view_list():
     ui.html(backgroundHtml)
     ui.button("Go back", on_click=lambda: ui.open(
         admin_page), color="red", icon="arrow_back")
-
-    global username
 
     print("Username getting pulled is " + username)
     df_tickets = pd.read_sql_query(
@@ -296,7 +304,6 @@ def admin_ticket_view_info():
                   color="green", icon="done").style("margin-bottom: 20px")
 
     def updateTicket():
-        global username
         indexToUse = ticketNumber
         print("Updating into index " + str(indexToUse) +
               " with the following information: ")
