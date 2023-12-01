@@ -362,9 +362,9 @@ def nonadmin_ticket_view_info():
         ui.label("Ticket User: " + ticketUsername.at[0, "User"])
         ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"])
         ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
-        ui.label("Ticket Due Date: " + ticketDueDate.at[0,"Duedate"])
-        ui.label("Issue Type: " + ticketIssueType.at[0,"Issuetype"])
-        ui.label("Ticket Reporter: " + ticketReporter.at[0,"Reporter"])
+        ui.label("Ticket Due Date: " + str(ticketDueDate.at[0, "Duedate"]))
+        ui.label("Issue Type: " + str(ticketIssueType.at[0, "Issuetype"]))
+        ui.label("Ticket Reporter: " + str(ticketReporter.at[0, "Reporter"]))
 
     with ui.column().classes('border-2 border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
         ui.label("Current Ticket Description: ")
@@ -691,9 +691,9 @@ def admin_ticket_view_info():
         ui.label("Ticket User: " + ticketUsername.at[0, "User"])
         ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"])
         ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
-        ui.label("Ticket Due Date: " + ticketDueDate.at[0,"Duedate"])
-        ui.label("Issue Type: " + ticketIssueType.at[0,"Issuetype"])
-        ui.label("Ticket Reporter: " + ticketReporter.at[0,"Reporter"])
+        ui.label("Ticket Due Date: " + str(ticketDueDate.at[0, "Duedate"]))
+        ui.label("Issue Type: " + str(ticketIssueType.at[0, "Issuetype"]))
+        ui.label("Ticket Reporter: " + str(ticketReporter.at[0, "Reporter"]))
 
     with ui.column().classes('border-2 border-red-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
         ui.label("Current Ticket Description: ")
