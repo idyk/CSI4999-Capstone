@@ -2,6 +2,7 @@ from nicegui import ui
 import sqlite3
 import pandas as pd
 import datetime
+from datetime import timedelta
 
 
 db_tickets = sqlite3.connect(r'.\tickets.db')
@@ -334,6 +335,12 @@ def nonadmin_ticket_view_info():
         "SELECT Status from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
     ticketUsername = pd.read_sql_query(
         "SELECT User from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+    ticketDueDate = pd.read_sql_query(
+        "SELECT Duedate from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+    ticketIssueType = pd.read_sql_query(
+        "SELECT IssueType from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+    ticketReporter = pd.read_sql_query(
+        "SELECT Reporter from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
     ticketHistoryDesc = pd.read_sql_query(
         "SELECT Description FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
     ticketHistoryTimestamp = pd.read_sql_query(
@@ -355,6 +362,9 @@ def nonadmin_ticket_view_info():
         ui.label("Ticket User: " + ticketUsername.at[0, "User"])
         ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"])
         ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
+        ui.label("Ticket Due Date: " + ticketDueDate.at[0,"Duedate"])
+        ui.label("Issue Type: " + ticketIssueType.at[0,"Issuetype"])
+        ui.label("Ticket Reporter: " + ticketReporter.at[0,"Reporter"])
 
     with ui.column().classes('border-2 border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
         ui.label("Current Ticket Description: ")
@@ -401,6 +411,8 @@ def nonadmin_ticket_view_info():
         desc = str(ticketDesc.value).replace("'", "''")
         print("After cleanse: ", desc)
         ticketTimeStamp = datetime.datetime.now()
+        if ticketDueDate is None:
+            ticketDueDate = ticketTimeStamp + timedelta(days=3)
         realTicketTimeStamp = ticketTimeStamp.strftime(
             "%b %d %Y") + " at " + ticketTimeStamp.strftime("%H") + ":" + ticketTimeStamp.strftime("%M")
         print(realTicketTimeStamp)
@@ -419,7 +431,7 @@ def nonadmin_ticket_view_info():
             print("HISTORY ID IS: " +
                   str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]))
             cursor.execute("INSERT INTO TicketHistory (HistoryID, TicketNumber, Username, Assignee, Description, Timestamp, Updater, Title) VALUES ('" + str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]) +
-                           "', '" + str(ticketNumber) + "', '" + str(username) + "', '" + str(ticketAssignee.at[0, "Assignee"]) + "', '" + str(desc) + "', '" + str(realTicketTimeStamp) + "', '" + str(username) + "', '" + str(title) + "')")
+                           "', '" + str(ticketNumber) + "', '" + str(username) + "', '" + str(ticketAssignee.at[0, "Assignee"]) + "', '" + str(desc) + "', '" + str(realTicketTimeStamp) + "', '" + str(ticketDueDate) + "', '" + str(username) + "', '" + str(title) + "')")
 
             db_history.commit()
             cursor.close()
@@ -646,6 +658,15 @@ def admin_ticket_view_info():
     ticketUsername = pd.read_sql_query(
         "SELECT User from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
 
+    ticketDueDate = pd.read_sql_query(
+        "SELECT Duedate from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+    
+    ticketIssueType = pd.read_sql_query(
+        "SELECT IssueType from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+    
+    ticketReporter = pd.read_sql_query(
+        "SELECT Reporter from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+    
     ticketHistoryDesc = pd.read_sql_query(
         "SELECT Description FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
 
@@ -670,6 +691,9 @@ def admin_ticket_view_info():
         ui.label("Ticket User: " + ticketUsername.at[0, "User"])
         ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"])
         ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
+        ui.label("Ticket Due Date: " + ticketDueDate.at[0,"Duedate"])
+        ui.label("Issue Type: " + ticketIssueType.at[0,"Issuetype"])
+        ui.label("Ticket Reporter: " + ticketReporter.at[0,"Reporter"])
 
     with ui.column().classes('border-2 border-red-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
         ui.label("Current Ticket Description: ")
@@ -732,6 +756,8 @@ def admin_ticket_view_info():
         print("After cleanse: ", desc)
 
         ticketTimeStamp = datetime.datetime.now()
+        if ticketDueDate is None:
+            ticketDueDate = ticketTimeStamp + timedelta(days=3)
         realTicketTimeStamp = ticketTimeStamp.strftime(
             "%b %d %Y") + " at " + ticketTimeStamp.strftime("%H") + ":" + ticketTimeStamp.strftime("%M")
         print(realTicketTimeStamp)
@@ -752,7 +778,7 @@ def admin_ticket_view_info():
 
             print("Username is " + str(ticketUsername.at[0, "User"]))
             cursor.execute("INSERT INTO TicketHistory (HistoryID, TicketNumber, Username, Assignee, Description, Timestamp, Updater, Title) VALUES ('" + str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]) +
-                           "', '" + str(ticketNumber) + "', '" + str(ticketUsername.at[0, "User"]) + "', '" + str(ticketAssignee.at[0, "Assignee"]) + "', '" + str(desc) + "', '" + str(realTicketTimeStamp) + "', '" + str(username) + "', '" + str(title) + "')")
+                           "', '" + str(ticketNumber) + "', '" + str(ticketUsername.at[0, "User"]) + "', '" + str(ticketAssignee.at[0, "Assignee"]) + "', '" + str(ticketDueDate) + "', '" + str(desc) + "', '" + str(realTicketTimeStamp) + "', '" + str(username) + "', '" + str(title) + "')")
 
             db_history.commit()
             cursor.close()
