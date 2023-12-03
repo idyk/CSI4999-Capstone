@@ -184,7 +184,12 @@ def nonadmin_ticket_create():
             ui.label("Create your ticket, " + str(username) + "!").tailwind.font_size('2xl').font_weight(
                 'bold').text_color('black').outline_color('white').outline_width('1').drop_shadow('lg')
             ticketTitle = ui.textarea(
-                "Enter your issue's title here.").classes('w-10/12 border-2 border-outset border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white')
+                "Enter your issue's title here.").classes('w-10/12 border-2 border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white')
+            ui.label("Issue Type").style("font-size: 20px")
+            ticketType = ui.toggle({1: 'Software', 2: 'Hardware'})
+            ui.label("Priority").style("font-size: 20px")
+            ticketPriority = ui.toggle(
+                {1: '1', 2: '2', 3: '3', 4: '4', 5: '5'})
             ticketDesc = ui.textarea(
                 "Enter your issue's description here.").classes('w-10/12 border-2 border-outset border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white')
             ui.button("Submit", on_click=lambda: submitTicket(
@@ -201,20 +206,51 @@ def nonadmin_ticket_create():
         title = str(ticketTitle.value).replace("'", "''")
         print("After cleanse: ", title)
 
+        print("Before cleanse: ", ticketType.value)
+        type = str(ticketType.value).replace("'", "''")
+        print("After cleanse: ", type)
+
         print("Before cleanse: ", ticketDesc.value)
         desc = str(ticketDesc.value).replace("'", "''")
         print("After cleanse: ", desc)
+
+        print("Before cleanse: ", ticketPriority.value)
+        priority = str(ticketPriority.value).replace("'", "''")
+        print("After cleanse: ", priority)
 
         ticketTimeStamp = datetime.datetime.now()
         realTicketTimeStamp = ticketTimeStamp.strftime(
             "%b %d %Y") + " at " + ticketTimeStamp.strftime("%H") + ":" + ticketTimeStamp.strftime("%M")
         print(realTicketTimeStamp)
 
+        ticketDueDate = ticketTimeStamp + datetime.timedelta(days=3)
+        realTicketDueDate = ticketDueDate.strftime(
+            "%b %d %Y") + " at " + ticketTimeStamp.strftime("%H") + ":" + ticketTimeStamp.strftime("%M")
+        print(realTicketDueDate)
+
+        # checks which option was chosen by the toggle and changes the number to its corresponding words
+        if type == 1:
+            type = 'Software'
+        else:
+            type = 'Hardware'
+
+        # grabs number value from priority option selected and applies it to output so you get a real number instead of some nicegui call
+        if priority == 1:
+            priority = '1'
+        elif priority == 2:
+            priority = '2'
+        elif priority == 3:
+            priority = '3'
+        elif priority == 4:
+            priority = '4'
+        elif priority == 5:
+            priority = '5'
+
         if (len(ticketTitle.value) > 0 and len(ticketDesc.value) > 0):
             cursor = db_tickets.cursor()
 
-            cursor.execute("INSERT INTO Tickets (TicketNumber, Title, Description, Timestamp, Assignee, Status, User) VALUES ('" + str(indexToUse) +
-                           "', '" + str(title) + "', '" + str(desc) + "', '" + str(realTicketTimeStamp) + "', 'No Assignee', 'Open', '" + username + "')")
+            cursor.execute("INSERT INTO Tickets (TicketNumber, Title, Description, Timestamp, Assignee, Status, User, Duedate, Issuetype, Priority) VALUES ('" + str(indexToUse) +
+                           "', '" + str(title) + "', '" + str(desc) + "', '" + str(realTicketTimeStamp) + "', 'No Assignee', 'Open', '" + username + "', '" + str(realTicketDueDate) + "', '" + str(type) + "', '" + str(priority) + "')")
             db_tickets.commit()
             cursor.close()
 
@@ -273,7 +309,6 @@ def nonadmin_ticket_view_list():
     print("Username getting pulled is " + username)
     df_tickets = pd.read_sql_query(
         "SELECT TicketNumber,Title from Tickets WHERE User = '" + username + "'", db_tickets)
-    
 
     global queriedTicketNumber
     queriedTicketNumber = [4] * 1
@@ -281,6 +316,7 @@ def nonadmin_ticket_view_list():
     grid = ui.aggrid.from_pandas(df_tickets).classes('max-h-40').classes(
         'max-h-40 max-w-99').on('cellClicked', lambda event: changeQueriedTicketNumber(int(f'{event.args["value"]}'))).on('cellClicked', lambda event: ui.open(nonadmin_ticket_view_info))
     grid.set_visibility(True)
+
 
 def changeQueriedTicketNumber(i):
     queriedTicketNumber[0] = i
@@ -291,7 +327,7 @@ def changeQueriedTicketNumber(i):
 
 @ui.page("/nonadmin_view_ticket_status")
 def nonadmin_view_ticket_status():
-     backgroundHtml = f""" 
+    backgroundHtml = f""" 
         <style> 
             body {{
                 background: linear-gradient(31deg, rgba(199,233,191,1) 0%, rgba(236,241,162,1) 30%, rgba(116,245,195,1) 65%, rgba(0,254,255,1) 98%);
@@ -313,20 +349,19 @@ def nonadmin_view_ticket_status():
         }}
         </style>
             """
-     ui.html(backgroundHtml)
-     ui.button("Go back", on_click=lambda: ui.open(
+    ui.html(backgroundHtml)
+    ui.button("Go back", on_click=lambda: ui.open(
         nonadmin_ticket_view_list), color="red", icon="arrow_back")
-    
-     global username
-     
-     df_tickets = pd.read_sql_query(
-        "SELECT TicketNumber, Status, Timestamp from Tickets WHERE User = '" + username + "'", db_tickets)
-    
 
-     grid = ui.aggrid.from_pandas(df_tickets).classes(
+    global username
+
+    df_tickets = pd.read_sql_query(
+        "SELECT TicketNumber, Status, Timestamp from Tickets WHERE User = '" + username + "'", db_tickets)
+
+    grid = ui.aggrid.from_pandas(df_tickets).classes(
         'max-h-40 max-w-99')
-     grid.set_visibility(True)
-     
+    grid.set_visibility(True)
+
 
 @ui.page("/nonadmin_ticket_view_info")
 def nonadmin_ticket_view_info():
@@ -368,6 +403,12 @@ def nonadmin_ticket_view_info():
         "SELECT Status from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
     ticketUsername = pd.read_sql_query(
         "SELECT User from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+    ticketDueDate = pd.read_sql_query(
+        "SELECT Duedate from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+    ticketIssueType = pd.read_sql_query(
+        "SELECT Issuetype from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+    ticketPriority = pd.read_sql_query(
+        "SELECT Priority from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
     ticketHistoryDesc = pd.read_sql_query(
         "SELECT Description FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
     ticketHistoryTimestamp = pd.read_sql_query(
@@ -383,16 +424,15 @@ def nonadmin_ticket_view_info():
         nonadmin_ticket_view_list), color="red", icon="arrow_back").tailwind.drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
 
     with ui.row().classes('border-2 border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
-        ui.label("Ticket #" + str(ticketNumber) +
-                 "     ||").style('font-weight:bold')
-
-        ui.label("Ticket Title: " + ticketTitle.at[0, "Title"] + "     ||")
-        ui.label("Last Updated: " +
-                 ticketTimestamp.at[0, "Timestamp"] + "     ||")
-        ui.label("Ticket User: " + ticketUsername.at[0, "User"] + "     ||")
-        ui.label("Ticket Assignee: " +
-                 ticketAssignee.at[0, "Assignee"] + "     ||")
-        ui.label("Ticket Status: " + ticketStatus.at[0, "Status"] + "     ||")
+        ui.label("Ticket #" + str(ticketNumber))
+        ui.label("Ticket Title: " + ticketTitle.at[0, "Title"])
+        ui.label("Last Updated: " + ticketTimestamp.at[0, "Timestamp"])
+        ui.label("Ticket User: " + ticketUsername.at[0, "User"])
+        ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"])
+        ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
+        ui.label("Ticket Due Date: " + str(ticketDueDate.at[0, "Duedate"]))
+        ui.label("Issue Type: " + str(ticketIssueType.at[0, "Issuetype"]))
+        ui.label("Ticket Priority: " + str(ticketPriority.at[0, "Priority"]))
 
     with ui.column().classes('border-2 border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
         ui.label("Current Ticket Description: ").tailwind.font_weight(
@@ -458,7 +498,7 @@ def nonadmin_ticket_view_info():
             print("HISTORY ID IS: " +
                   str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]))
             cursor.execute("INSERT INTO TicketHistory (HistoryID, TicketNumber, Username, Assignee, Description, Timestamp, Updater, Title) VALUES ('" + str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]) +
-                           "', '" + str(ticketNumber) + "', '" + str(username) + "', '" + str(ticketAssignee.at[0, "Assignee"]) + "', '" + str(desc) + "', '" + str(realTicketTimeStamp) + "', '" + str(username) + "', '" + str(title) + "')")
+                           "', '" + str(ticketNumber) + "', '" + str(username) + "', '" + str(ticketAssignee.at[0, "Assignee"]) + "', '" + str(desc) + "', '" + str(realTicketTimeStamp) + "', '" + str(ticketDueDate) + "', '" + str(username) + "', '" + str(title) + "')")
 
             db_history.commit()
             cursor.close()
@@ -601,12 +641,13 @@ def admin_ticket_view_list():
         </style>
             """
     ui.html(backgroundHtml)
-    ui.button("Go back", on_click=lambda: ui.open(admin_page), color="red", icon="arrow_back").tailwind.drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
-    ui.button("Number of Tickets per User", on_click=lambda: ui.open(admin_created_tickets_by_user), color="red", icon="arrow_forward")
+    ui.button("Go back", on_click=lambda: ui.open(admin_page), color="red",
+              icon="arrow_back").tailwind.drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
+    ui.button("Number of Tickets per User", on_click=lambda: ui.open(
+        admin_created_tickets_by_user), color="red", icon="arrow_forward")
 
     global username
 
-    
     print("Username getting pulled is " + username)
     df_tickets = pd.read_sql_query(
         "SELECT TicketNumber,Title,User from Tickets", db_tickets)
@@ -646,7 +687,7 @@ def admin_created_tickets_by_user():
     ui.html(backgroundHtml)
     ui.button("Go back", on_click=lambda: ui.open(
         admin_ticket_view_list), color="red", icon="arrow_back")
-    
+
     global username
 
     table_data = """
@@ -659,15 +700,15 @@ def admin_created_tickets_by_user():
         WHERE User != 'admin'
         GROUP BY User
         """
-    
+
     df_tickets = pd.read_sql_query(table_data, db_tickets)
 
     grid = ui.aggrid.from_pandas(df_tickets).classes('max-h-40 max-w-99')
     grid.set_visibility(True)
-    
+
+
 def changeQueriedTicketNumber(i):
     queriedTicketNumber[0] = i
-
 
 
 @ui.page("/admin_ticket_view_info")
@@ -722,6 +763,15 @@ def admin_ticket_view_info():
     ticketUsername = pd.read_sql_query(
         "SELECT User from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
 
+    ticketDueDate = pd.read_sql_query(
+        "SELECT Duedate from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+
+    ticketIssueType = pd.read_sql_query(
+        "SELECT IssueType from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+
+    ticketPriority = pd.read_sql_query(
+        "SELECT Priority from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+
     ticketHistoryDesc = pd.read_sql_query(
         "SELECT Description FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
 
@@ -740,15 +790,15 @@ def admin_ticket_view_info():
         admin_ticket_view_list), color="red", icon="arrow_back").tailwind.drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
 
     with ui.row().classes('border-2 border-red-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
-        ui.label("Ticket #" + str(ticketNumber) +
-                 "     ||").style('font-weight:bold')
-        ui.label("Ticket Title: " + ticketTitle.at[0, "Title"] + "     ||")
-        ui.label("Last Updated: " +
-                 ticketTimestamp.at[0, "Timestamp"] + "     ||")
-        ui.label("Ticket User: " + ticketUsername.at[0, "User"] + "     ||")
-        ui.label("Ticket Assignee: " +
-                 ticketAssignee.at[0, "Assignee"] + "     ||")
-        ui.label("Ticket Status: " + ticketStatus.at[0, "Status"] + "     ||")
+        ui.label("Ticket #" + str(ticketNumber))
+        ui.label("Ticket Title: " + ticketTitle.at[0, "Title"])
+        ui.label("Last Updated: " + ticketTimestamp.at[0, "Timestamp"])
+        ui.label("Ticket User: " + ticketUsername.at[0, "User"])
+        ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"])
+        ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
+        ui.label("Ticket Due Date: " + str(ticketDueDate.at[0, "Duedate"]))
+        ui.label("Issue Type: " + str(ticketIssueType.at[0, "Issuetype"]))
+        ui.label("Ticket Priority: " + str(ticketPriority.at[0, "Priority"]))
 
     with ui.column().classes('border-2 border-red-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
         ui.label("Current Ticket Description: ").tailwind.font_weight('bold')
@@ -791,8 +841,10 @@ def admin_ticket_view_info():
         ui.label("Update Status").style("font-size: 20px")
         selectedStatus = ui.select(options=arrayOfStatuses, value=arrayOfStatuses[0],
                                    on_change=lambda: print("status selected")).classes('w-max')
+        ui.label("Change Priority").style("font-size: 20px")
+        ticketPriority = ui.toggle({1: '1', 2: '2', 3: '3', 4: '4', 5: '5'})
         ticketTitle = ui.textarea(
-            "Update title.").classes('w-full')
+            "Update title").classes('w-full')
         ticketDesc = ui.textarea("Update description.").classes('w-full')
         ui.button("Submit", on_click=lambda: updateTicket(),
                   color="green", icon="done").style("margin-bottom: 20px").tailwind.animation('bounce').drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
@@ -810,14 +862,31 @@ def admin_ticket_view_info():
         desc = str(ticketDesc.value).replace("'", "''")
         print("After cleanse: ", desc)
 
+        print("Before cleanse: ", ticketPriority.value)
+        priority = str(ticketPriority.value).replace("'", "''")
+        print("After cleanse: ", priority)
+
         ticketTimeStamp = datetime.datetime.now()
         realTicketTimeStamp = ticketTimeStamp.strftime(
             "%b %d %Y") + " at " + ticketTimeStamp.strftime("%H") + ":" + ticketTimeStamp.strftime("%M")
+
+        # grabs number value from priority option selected and applies it to output so you get a real number instead of some nicegui call
+        if priority == 1:
+            priority = '1'
+        elif priority == 2:
+            priority = '2'
+        elif priority == 3:
+            priority = '3'
+        elif priority == 4:
+            priority = '4'
+        elif priority == 5:
+            priority = '5'
+
         print(realTicketTimeStamp)
         if (len(ticketTitle.value) > 0 and len(ticketDesc.value) > 0):
             cursor = db_tickets.cursor()
             cursor.execute("UPDATE Tickets SET Title = '" + str(title) + "', Description = '" + str(desc) + "', Assignee = '" + str(selectedAssignee.value) +
-                           "', Status = '" + str(selectedStatus.value) + "', Timestamp = '" + str(realTicketTimeStamp) + "' WHERE TicketNumber = '" + str(ticketNumber) + "'")
+                           "', Status = '" + str(selectedStatus.value) + "', Timestamp = '" + str(realTicketTimeStamp) + "', Priority = '" + str(priority) + "' WHERE TicketNumber = '" + str(ticketNumber) + "'")
             db_tickets.commit()
             cursor.close()
 
