@@ -265,12 +265,15 @@ def nonadmin_ticket_view_list():
     ui.html(backgroundHtml)
     ui.button("Go back", on_click=lambda: ui.open(
         nonadmin_page), color="red", icon="arrow_back")
+    ui.button("View Ticket Status", on_click=lambda: ui.open(
+        nonadmin_view_ticket_status), color="red", icon="arrow_forward")
 
     global username
 
     print("Username getting pulled is " + username)
     df_tickets = pd.read_sql_query(
         "SELECT TicketNumber,Title from Tickets WHERE User = '" + username + "'", db_tickets)
+    
 
     global queriedTicketNumber
     queriedTicketNumber = [4] * 1
@@ -279,14 +282,51 @@ def nonadmin_ticket_view_list():
         'max-h-40 max-w-99').on('cellClicked', lambda event: changeQueriedTicketNumber(int(f'{event.args["value"]}'))).on('cellClicked', lambda event: ui.open(nonadmin_ticket_view_info))
     grid.set_visibility(True)
 
-
 def changeQueriedTicketNumber(i):
     queriedTicketNumber[0] = i
     # This creates a dropdown for the user to pick from which ticket they would like to view further information on.
 
-
 # This will show further information. There is also another button to view even more details.
 
+
+@ui.page("/nonadmin_view_ticket_status")
+def nonadmin_view_ticket_status():
+     backgroundHtml = f""" 
+        <style> 
+            body {{
+                background: linear-gradient(31deg, rgba(199,233,191,1) 0%, rgba(236,241,162,1) 30%, rgba(116,245,195,1) 65%, rgba(0,254,255,1) 98%);
+                background-size: 400% 400%;
+                animation: gradient 5s ease infinite;
+                height: 100vh;
+            }}
+
+        @keyframes gradient {{
+            0% {{
+                background-position: 0% 50%;
+            }}
+            50% {{
+                background-position: 100% 50%;
+            }}
+            100% {{
+                background-position: 0% 50%;
+            }}
+        }}
+        </style>
+            """
+     ui.html(backgroundHtml)
+     ui.button("Go back", on_click=lambda: ui.open(
+        nonadmin_ticket_view_list), color="red", icon="arrow_back")
+    
+     global username
+     
+     df_tickets = pd.read_sql_query(
+        "SELECT TicketNumber, Status, Timestamp from Tickets WHERE User = '" + username + "'", db_tickets)
+    
+
+     grid = ui.aggrid.from_pandas(df_tickets).classes(
+        'max-h-40 max-w-99')
+     grid.set_visibility(True)
+     
 
 @ui.page("/nonadmin_ticket_view_info")
 def nonadmin_ticket_view_info():
@@ -561,14 +601,15 @@ def admin_ticket_view_list():
         </style>
             """
     ui.html(backgroundHtml)
-    ui.button("Go back", on_click=lambda: ui.open(
-        admin_page), color="red", icon="arrow_back").tailwind.drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
+    ui.button("Go back", on_click=lambda: ui.open(admin_page), color="red", icon="arrow_back").tailwind.drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
+    ui.button("Number of Tickets per User", on_click=lambda: ui.open(admin_created_tickets_by_user), color="red", icon="arrow_forward")
 
     global username
 
+    
     print("Username getting pulled is " + username)
     df_tickets = pd.read_sql_query(
-        "SELECT TicketNumber,Title from Tickets", db_tickets)
+        "SELECT TicketNumber,Title,User from Tickets", db_tickets)
 
     global queriedTicketNumber
     queriedTicketNumber = [4] * 1
@@ -578,8 +619,55 @@ def admin_ticket_view_list():
     grid.set_visibility(True)
 
 
+@ui.page("/admin_created_tickets_by_user")
+def admin_created_tickets_by_user():
+    backgroundHtml = f""" 
+        <style> 
+            body {{
+                background: linear-gradient(31deg, rgba(242,125,119,1) 0%, rgba(244,122,77,1) 30%, rgba(235,225,150,1) 70%, rgba(214,130,32,1) 99%);
+                background-size: 400% 400%;
+                animation: gradient 5s ease infinite;
+                height: 100vh;
+            }}
+
+        @keyframes gradient {{
+            0% {{
+                background-position: 0% 50%;
+            }}
+            50% {{
+                background-position: 100% 50%;
+            }}
+            100% {{
+                background-position: 0% 50%;
+            }}
+        }}
+        </style>
+            """
+    ui.html(backgroundHtml)
+    ui.button("Go back", on_click=lambda: ui.open(
+        admin_ticket_view_list), color="red", icon="arrow_back")
+    
+    global username
+
+    table_data = """
+        SELECT User AS Username, 
+        COUNT(User) AS TotalTicketsCreated,
+        SUM(CASE WHEN Status='Open' THEN 1 ELSE 0 END) AS NumberOfOpenTickets,
+        SUM(CASE WHEN Status='Resolved' THEN 1 ELSE 0 END) AS NumberOfResolvedTickets,
+        SUM(CASE WHEN Status='On Hold' THEN 1 ELSE 0 END) AS NumberOfOnHoldTickets
+        FROM Tickets
+        WHERE User != 'admin'
+        GROUP BY User
+        """
+    
+    df_tickets = pd.read_sql_query(table_data, db_tickets)
+
+    grid = ui.aggrid.from_pandas(df_tickets).classes('max-h-40 max-w-99')
+    grid.set_visibility(True)
+    
 def changeQueriedTicketNumber(i):
     queriedTicketNumber[0] = i
+
 
 
 @ui.page("/admin_ticket_view_info")
