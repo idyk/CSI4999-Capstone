@@ -228,8 +228,11 @@ def nonadmin_ticket_view_list():
     global queriedTicketNumber
     queriedTicketNumber = [4] * 1
 
-    grid = ui.aggrid.from_pandas(df_tickets).classes('max-h-40').classes(
-        'max-h-40 max-w-99').on('cellClicked', lambda event: changeQueriedTicketNumber(int(f'{event.args["value"]}'))).on('cellClicked', lambda event: ui.open(nonadmin_ticket_view_info))
+    ui.label("Select the ticket number to view. You can also view an overview of all your current tickets from the above view button.").style("text-align: center; margin-left: auto; margin-right: auto;").tailwind.font_size('2xl').font_weight(
+        'bold').text_color('black').outline_color('white').outline_width('1').drop_shadow('lg')
+
+    grid = ui.aggrid.from_pandas(df_tickets).classes(
+        'max-h-screen').on('cellClicked', lambda event: changeQueriedTicketNumber(int(f'{event.args["value"]}'))).on('cellClicked', lambda event: ui.open(nonadmin_ticket_view_info))
     grid.set_visibility(True)
 
 
