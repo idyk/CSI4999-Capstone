@@ -2,6 +2,7 @@ from nicegui import ui
 import sqlite3
 import pandas as pd
 import datetime
+from nicegui import Tailwind, ui
 
 
 db_tickets = sqlite3.connect(r'.\tickets.db')
@@ -53,16 +54,16 @@ def login_page():
             # ui.query('body').style(
             #     'background-image: linear-gradient(to right, #6495ED, #00FFFF); font-family: Sans-serif')
             ui.label("Welcome to TICKSTER").style(
-                'color: white; font-size: 40px; font-weight: bold; -webkit-text-stroke-width: 2px; -webkit-text-stroke-color: black;')
+                'color: white; font-size: 40px; font-weight: bold; text-shadow: 2px 2px 4px black; -webkit-text-stroke-width: 2px; -webkit-text-stroke-color: black;')
             ui.label("Please login with your credentials to access the system.").style(
-                'color: white; font-weight: bold; font-size: 30px; -webkit-text-stroke-width: 1px; -webkit-text-stroke-color: black;')
-            with ui.column().classes('w-6/12 border-2 border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
-                username = ui.input(label="Username").style("width: 12%")
+                'color: white; font-weight: bold; font-size: 30px; -webkit-text-stroke-width: 1px; text-shadow: 2px 2px 4px black; -webkit-text-stroke-color: black;')
+            with ui.column().classes('w-6/12 border-4 border-outset border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
+                username = ui.input(label="Username").classes('border-2 border-solid border-indigo-600 rounded-lg ').style("width: 30%")
                 password = ui.input(label="Password", password=True,
-                                    ).style("width: 12%")
+                                    ).classes('border-2 border-inset border-grey .p12 rounded-lg ').style("width: 30%")
 
         ui.button("Sign in", on_click=lambda: attemptLogin(
-        ), color="green", icon="how_to_reg").classes("py-2 px-4 rounded-full")
+        ), color="green", icon="how_to_reg").classes("py-2 px-4 rounded-full ").tailwind.drop_shadow('lg').animation('bounce').box_shadow('inner').box_shadow_color('black').gradient_color_stops('from-10%').justify_content('center')
 
     # This checks the username and password against the login database for validation. It will also check if the user is elevated or not to
     # direct them to the correct set of pages.
@@ -129,23 +130,25 @@ def nonadmin_page():
     #     ' background: rgb(199,233,191); background: linear-gradient(31deg, rgba(199,233,191,1) 0%, rgba(236,241,162,1) 30%, rgba(116,245,195,1) 65%, rgba(0,254,255,1) 98%); ;')
 
     ui.button("Logout", on_click=lambda: ui.open(
-        login_page), icon="logout", color="red")
+        login_page), icon="logout", color="red").tailwind.drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
     with ui.row().classes('w-full justify-center'):
         with ui.column().classes('w-full items-center'):
             ui.label("Hello " + str(username) +
-                     "!").style("font-size: 40px; font-weight: bold")
+                     "!").style("font-size: 40px; font-weight: bold").tailwind.animation('bounce')
             ui.label("Please select from the options below.").style(
                 "font-size: 25px;")
 
             ui.button("Create Ticket", on_click=lambda: ui.open(
-                nonadmin_ticket_create), color="green", icon="edit").classes("py-2 px-4 rounded-full")
+                nonadmin_ticket_create), color="green", icon="edit").classes("py-2 px-4 rounded-full").tailwind.drop_shadow('lg').box_shadow('inner').box_shadow_color('black').gradient_color_stops('from-10%').justify_content('center')
             ui.button("View Created Tickets", on_click=lambda: ui.open(
-                nonadmin_ticket_view_list), color="orange", icon="search").classes("py-2 px-4 rounded-full")
+                nonadmin_ticket_view_list), color="orange", icon="search").classes("py-2 px-4 rounded-full").tailwind.drop_shadow('lg').box_shadow('inner').box_shadow_color('black').gradient_color_stops('from-10%').justify_content('center')
 
 
 # Creating a ticket as a nonadmin page. Lets user type title and issue, and then when they submit,
 # it will auto generate the next ticket number, as well as a timestamp.
 # It will default to No Assignee and Open until someone on Admin side takes control of ticket.
+
+#--------------------
 
 
 @ui.page("/nonadmin_ticket_create")
@@ -174,16 +177,16 @@ def nonadmin_ticket_create():
             """
     ui.html(backgroundHtml)
     ui.button("Go back", on_click=lambda: ui.open(
-        nonadmin_page), color="red", icon="arrow_back")
-    with ui.row().classes('w-full justify-center'):
-        with ui.column().classes('w-full items-center'):
-            ui.label("Create your ticket, " + str(username) + "!")
+        nonadmin_page), color="red", icon="arrow_back").tailwind.drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
+    with ui.row().classes('w-full justify-center border-indigo border-width-thick'):
+        with ui.column().classes('w-full items-center border-indigo border-width-thick'):
+            ui.label("Create your ticket, " + str(username) + "!").tailwind.font_size('2xl').font_weight('bold').text_color('black').outline_color('white').outline_width('1').drop_shadow('lg')
             ticketTitle = ui.textarea(
-                "Enter your issue's title here.").classes('w-10/12 border-2 border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white')
+                "Enter your issue's title here.").classes('w-10/12 border-2 border-outset border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white')
             ticketDesc = ui.textarea(
-                "Enter your issue's description here.").classes('w-10/12 border-2 border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white')
+                "Enter your issue's description here.").classes('w-10/12 border-2 border-outset border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white')
             ui.button("Submit", on_click=lambda: submitTicket(
-            ), color="green", icon="check").classes("py-2 px-4 rounded-full")
+            ), color="green", icon="check").classes("py-2 px-4 rounded-full").tailwind.drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
 
     def submitTicket():
         global username
@@ -230,8 +233,7 @@ def nonadmin_ticket_create():
             ui.notify("No blank tickets permitted.",
                       type="warning", position="top")
 
-# This lets the user view their tickets list by ticket number and title only.
-
+# This lets the user view their tickets list by ticket number and title onl
 
 @ui.page("/nonadmin_ticket_view_list")
 def nonadmin_ticket_view_list():
@@ -259,7 +261,7 @@ def nonadmin_ticket_view_list():
             """
     ui.html(backgroundHtml)
     ui.button("Go back", on_click=lambda: ui.open(
-        nonadmin_page), color="red", icon="arrow_back")
+        nonadmin_page), color="red", icon="arrow_back").tailwind.drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
 
     global username
 
@@ -268,7 +270,7 @@ def nonadmin_ticket_view_list():
         "SELECT TicketNumber,Title from Tickets WHERE User = '" + username + "'", db_tickets)
 
     grid = ui.aggrid.from_pandas(df_tickets).classes(
-        'max-h-40 max-w-99')
+        'max-h-40 max-w-99 border-2 border-solid')
     grid.set_visibility(True)
 
     ticketNumbersSqlQueryGet = pd.read_sql_query(
@@ -283,11 +285,11 @@ def nonadmin_ticket_view_list():
             ticketNumbersSqlQueryGet.at[i, 'TicketNumber'])
 
     global queriedTicketNumber
-    with ui.row().classes('w-full justify-center'):
-        with ui.column().classes('w-full items-center'):
+    with ui.row().classes('w-full justify-center border-style-solid border-color-indigo border-width-medium'):
+        with ui.column().classes('w-full items-center bordr-style-solid border-color-indigo border-width-medium'):
             ui.label(
                 "Select the ticket from the dropdown to see more information on it, or to update it.").style(
-                "font-size: 19px; font-weight: bold")
+                "font-size: 20px; font-weight: bold")
             queriedTicketNumber = ui.select(options=arrayOfTicketNumbers,
                                             on_change=lambda: ui.open(nonadmin_ticket_view_info))
 
@@ -346,10 +348,10 @@ def nonadmin_ticket_view_info():
     ui.query('.nicegui-content').style('display: inline; padding: 0px')
 
     ui.button("Go back", on_click=lambda: ui.open(
-        nonadmin_ticket_view_list), color="red", icon="arrow_back")
+        nonadmin_ticket_view_list), color="red", icon="arrow_back").tailwind.drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
 
     with ui.row().classes('border-2 border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
-        ui.label("Ticket #" + str(ticketNumber))
+        ui.label("Ticket #" + str(ticketNumber)).tailwind.font_weight('bold')
         ui.label("Ticket Title: " + ticketTitle.at[0, "Title"])
         ui.label("Last Updated: " + ticketTimestamp.at[0, "Timestamp"])
         ui.label("Ticket User: " + ticketUsername.at[0, "User"])
@@ -357,12 +359,12 @@ def nonadmin_ticket_view_info():
         ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
 
     with ui.column().classes('border-2 border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
-        ui.label("Current Ticket Description: ")
+        ui.label("Current Ticket Description: ").tailwind.font_weight('extrabold')
         ui.label(ticketDesc.at[0, "Description"])
 
     with ui.column().classes('justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
         ui.button("Toggle History", color="red", icon="history", on_click=lambda: createHistory(
-        )).style('font-weight: bold; text-align: center')
+        )).style('font-weight: bold; text-align: center').tailwind.drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
 
     container = ui.row().classes('w-full justify-center')
 
@@ -376,17 +378,17 @@ def nonadmin_ticket_view_info():
                 with ui.column().classes('w-max items-center border-2 border-indigo-600 justify-center items-center .p-12 rounded-lg').style("background-color: white;"):
                     for i in range(0, len(ticketHistoryDesc), 1):
                         ui.label("Ticket Description at " +
-                                 ticketHistoryTimestamp.at[i, "Timestamp"] + " by " + ticketHistoryUpdater.at[i, "Updater"] + " with title " + ticketHistoryTitle.at[i, "Title"]).style('text-align: center; padding: 20px')
+                                 ticketHistoryTimestamp.at[i, "Timestamp"] + " by " + ticketHistoryUpdater.at[i, "Updater"] + " with title " + ticketHistoryTitle.at[i, "Title"]).style('text-align: center; padding: 20px').tailwind.font_weight('bold')
                         ui.label(ticketHistoryDesc.at[i, "Description"]).style(
                             'text-align: center; padding: 20px')
 
-    with ui.row().classes('w-full justify-center'):
-        with ui.column().classes('w-full items-center'):
+    with ui.row().classes('w-full justify-center border-width-thick border-color-indigo'):
+        with ui.column().classes('w-full items-center border-width-thick border-color-indigo'):
             ticketDesc = ui.textarea("Update description.").classes('w-10/12 border-2 border-indigo-600 justify-center items-center .p-12 rounded-lg').style(
                 'text-align: center; padding: 20px; margin: 20px; background-color: white')
             ui.button("Submit", on_click=lambda: updateTicket(),
-                      color="green", icon="done").style("margin-bottom: 20px")
-
+                      color="green", icon="done").style("margin-bottom: 20px").tailwind.animation('bounce').drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
+#______________________________________________________________________
     ticketTitle = ticketTitle.at[0, "Title"]
 
     def updateTicket():
@@ -459,17 +461,17 @@ def admin_page():
     ui.html(backgroundHtml)
 
     ui.button("Logout", on_click=lambda: ui.open(
-        login_page), icon="logout", color="red")
-    with ui.row().classes('w-full justify-center'):
+        login_page), icon="logout", color="red").tailwind.drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
+    with ui.row().classes('w-full justify-center border-width-thick border-color-red'):
         with ui.column().classes('w-full items-center'):
             ui.label("Hello " + str(username) +
-                     "!").style("font-size: 40px; font-weight: bold")
+                     "!").style("font-size: 40px; font-weight: bold").tailwind.animation('bounce')
             ui.label("Please select from the options below.").style(
                 "font-size: 25px;")
             ui.button("View Created Tickets", on_click=lambda: ui.open(
-                admin_ticket_view_list), color="orange", icon="search").classes("py-2 px-4 rounded-full")
+                admin_ticket_view_list), color="orange", icon="search").classes("py-2 px-4 rounded-full").tailwind.drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
             ui.button("Create A User", on_click=lambda: ui.open(
-                admin_create_user), color="pink", icon="add").classes("py-2 px-4 rounded-full")
+                admin_create_user), color="pink", icon="add").classes("py-2 px-4 rounded-full").tailwind.drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
 
 
 @ui.page("/admin_create_user")
@@ -498,17 +500,17 @@ def admin_create_user():
             """
     ui.html(backgroundHtml)
     ui.button("Go back", on_click=lambda: ui.open(
-        admin_page), color="red", icon="arrow_back")
+        admin_page), color="red", icon="arrow_back").tailwind.drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
     with ui.row().classes('w-2/3 border-2 border-red-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin-left: auto; margin-right: auto; background-color: white'):
         with ui.column().classes('w-full items-center'):
             newUsername = ui.input(
-                "Create username.").classes('w-50 items-center').style("text-align: center")
+                "Create username.").classes('w-50 items-center').style("text-align: center; font-weight: bold")
             newPassword = ui.input(
-                "Create password.").classes('w-50')
+                "Create password.").classes('w-50 items-center').style("text-align: center; font-weight: bold") 
             ui.label("Elevated?")
             elevationStatus = ui.select(options=["False", "True"])
             ui.button("Create User", on_click=lambda: generateUser(
-                newUsername.value, newPassword.value, elevationStatus.value), color="green", icon="add_circle")
+                newUsername.value, newPassword.value, elevationStatus.value), color="green", icon="add_circle").tailwind.animation('bounce').drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
 
     def generateUser(usernameInput, passwordInput, elevationInput):
 
@@ -563,7 +565,7 @@ def admin_ticket_view_list():
             """
     ui.html(backgroundHtml)
     ui.button("Go back", on_click=lambda: ui.open(
-        admin_page), color="red", icon="arrow_back")
+        admin_page), color="red", icon="arrow_back").tailwind.drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
 
     global username
 
@@ -585,8 +587,8 @@ def admin_ticket_view_list():
             ticketNumbersSqlQueryGet.at[i, 'TicketNumber'])
 
     global queriedTicketNumber
-    with ui.row().classes('w-full justify-center'):
-        with ui.column().classes('w-full items-center'):
+    with ui.row().classes('w-full justify-center border-width-thick border-color-red'):
+        with ui.column().classes('w-full items-centerborder-width-thick border-color-red'):
             ui.label(
                 "Select the ticket from the dropdown to see more information on it, or to update it.").style(
                 "font-size: 19px; font-weight: bold")
@@ -661,10 +663,10 @@ def admin_ticket_view_info():
     ui.query('.nicegui-content').style('display: inline; padding: 0px')
 
     ui.button("Go back", on_click=lambda: ui.open(
-        admin_ticket_view_list), color="red", icon="arrow_back")
+        admin_ticket_view_list), color="red", icon="arrow_back").tailwind.drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
 
     with ui.row().classes('border-2 border-red-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
-        ui.label("Ticket #" + str(ticketNumber))
+        ui.label("Ticket #" + str(ticketNumber)).tailwind.font_weight('bold')
         ui.label("Ticket Title: " + ticketTitle.at[0, "Title"])
         ui.label("Last Updated: " + ticketTimestamp.at[0, "Timestamp"])
         ui.label("Ticket User: " + ticketUsername.at[0, "User"])
@@ -672,12 +674,12 @@ def admin_ticket_view_info():
         ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
 
     with ui.column().classes('border-2 border-red-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
-        ui.label("Current Ticket Description: ")
+        ui.label("Current Ticket Description: ").tailwind.font_weight('bold')
         ui.label(ticketDesc.at[0, "Description"])
 
     with ui.column().classes('justify-center items-center .p-12').style('text-align: center; padding: 20px; margin: 20px'):
         ui.button("Toggle History", color="red", icon="history", on_click=lambda: createHistory(
-        )).style('font-weight: bold; text-align: center')
+        )).style('font-weight: bold; text-align: center').tailwind.drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
 
     container = ui.row().classes('w-full justify-center')
 
@@ -693,7 +695,7 @@ def admin_ticket_view_info():
                         ui.label("Ticket Description at " +
                                  ticketHistoryTimestamp.at[i, "Timestamp"] + " by " + ticketHistoryUpdater.at[i, "Updater"] + " with title " + ticketHistoryTitle.at[i, "Title"]).style('text-align: center; padding: 20px')
                         ui.label(ticketHistoryDesc.at[i, "Description"]).style(
-                            'text-align: center; padding: 20px')
+                            'text-align: center; padding: 20px').tailwind.font_weight('bold')
 
     arrayOfAssignees = []
     for i in range(0, len(elevatedUserGet), 1):
@@ -716,7 +718,7 @@ def admin_ticket_view_info():
             "Update title.").classes('w-full')
         ticketDesc = ui.textarea("Update description.").classes('w-full')
         ui.button("Submit", on_click=lambda: updateTicket(),
-                  color="green", icon="done").style("margin-bottom: 20px")
+                  color="green", icon="done").style("margin-bottom: 20px").tailwind.animation('bounce').drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
 
     def updateTicket():
         global username
