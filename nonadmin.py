@@ -13,6 +13,8 @@ username = getUsername()
 
 
 def open_nonadmin():
+    global username
+    username = getUsername()
     print("open nonadmin")
     ui.open(nonadmin_page)
 
@@ -433,7 +435,7 @@ def nonadmin_ticket_view_info():
             print("HISTORY ID IS: " +
                   str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]))
             cursor.execute("INSERT INTO TicketHistory (HistoryID, TicketNumber, Username, Assignee, Description, Timestamp, Updater, Title) VALUES ('" + str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]) +
-                           "', '" + str(ticketNumber) + "', '" + str(username) + "', '" + str(ticketAssignee.at[0, "Assignee"]) + "', '" + str(desc) + "', '" + str(realTicketTimeStamp) + "', '" + str(ticketDueDate) + "', '" + str(username) + "', '" + str(title) + "')")
+                           "', '" + str(ticketNumber) + "', '" + str(username) + "', '" + str(ticketAssignee.at[0, "Assignee"]) + "', '" + str(desc) + "', '" + str(realTicketTimeStamp) + "', '" + str(username) + "', '" + str(title) + "')")
 
             db_history.commit()
             cursor.close()

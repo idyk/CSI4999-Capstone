@@ -17,23 +17,13 @@ def startup():
 
 
 def open_login():
+    setUsername("")
     print("open")
     ui.open(login_page)
 
 
 @ui.page('/login_page')
 def login_page():
-    # Since local files get encrypted on launch, you can get around it by getting the source from ui.image and then using it in HTML :)
-    # bgSource = ui.image("./images/test.gif").style("display: none;").source
-    # backgroundHtml = f"""
-    #     <style>
-    #         body {{
-    #             background-image: url("{bgSource}");
-    #             background-repeat: no-repeat;
-    #             background-size: cover;
-    #         }}
-    #     </style>
-    #         """
     backgroundHtml = f""" 
         <style> 
             body {{
@@ -60,8 +50,6 @@ def login_page():
 
     with ui.row().classes('w-full justify-center'):
         with ui.column().classes('w-full items-center'):
-            # ui.query('body').style(
-            #     'background-image: linear-gradient(to right, #6495ED, #00FFFF); font-family: Sans-serif')
             ui.label("Welcome to TICKSTER").style(
                 'color: white; font-size: 40px; font-weight: bold; text-shadow: 2px 2px 4px black; -webkit-text-stroke-width: 2px; -webkit-text-stroke-color: black;')
             ui.label("Please login with your credentials to access the system.").style(
@@ -79,7 +67,6 @@ def login_page():
     # direct them to the correct set of pages.
 
     def attemptLogin():
-        # print(bgSource)
         usernameSqlQueryCheck = pd.read_sql_query(
             "SELECT Username FROM Logins WHERE Username = '" + username.value + "'", db_login)
         passwordSqlQueryCheck = pd.read_sql_query(

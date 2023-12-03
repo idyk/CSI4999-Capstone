@@ -14,6 +14,8 @@ username = getUsername()
 
 
 def open_admin():
+    global username
+    username = getUsername()
     print("open nonadmin")
     ui.open(admin_page)
 
