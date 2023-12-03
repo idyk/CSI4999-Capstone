@@ -2,7 +2,6 @@ from nicegui import ui
 import sqlite3
 import pandas as pd
 import datetime
-from datetime import timedelta
 
 
 db_tickets = sqlite3.connect(r'.\tickets.db')
@@ -181,8 +180,10 @@ def nonadmin_ticket_create():
             ui.label("Create your ticket, " + str(username) + "!")
             ticketTitle = ui.textarea(
                 "Enter your issue's title here.").classes('w-10/12 border-2 border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white')
+            ui.label("Issue Type").style("font-size: 20px")
             ticketType = ui.toggle({1: 'Software', 2:'Hardware'})
-            ticketPriority = ui.toggle([1, 2, 3, 4, 5], value=1)
+            ui.label("Priority").style("font-size: 20px")
+            ticketPriority = ui.toggle({1: '1', 2: '2', 3: '3', 4: '4', 5: '5'})
             ticketDesc = ui.textarea(
                 "Enter your issue's description here.").classes('w-10/12 border-2 border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white')
             ui.button("Submit", on_click=lambda: submitTicket(
@@ -207,23 +208,43 @@ def nonadmin_ticket_create():
         desc = str(ticketDesc.value).replace("'", "''")
         print("After cleanse: ", desc)
 
-        priority = ticketPriority
-        print("priority level: ", priority)
+        print("Before cleanse: ", ticketPriority.value)
+        priority = str(ticketPriority.value).replace("'", "''")
+        print("After cleanse: ", priority)
 
         ticketTimeStamp = datetime.datetime.now()
         realTicketTimeStamp = ticketTimeStamp.strftime(
             "%b %d %Y") + " at " + ticketTimeStamp.strftime("%H") + ":" + ticketTimeStamp.strftime("%M")
         print(realTicketTimeStamp)
 
-        if ticketDueDate is None:
-            ticketDueDate = realTicketTimeStamp + timedelta(days=3)
-        print(ticketDueDate)
+        ticketDueDate = ticketTimeStamp + datetime.timedelta(days=3)
+        realTicketDueDate = ticketDueDate.strftime(
+            "%b %d %Y") + " at " + ticketTimeStamp.strftime("%H") + ":" + ticketTimeStamp.strftime("%M")
+        print(realTicketDueDate)
+
+        #checks which option was chosen by the toggle and changes the number to its corresponding words
+        if type == 1:
+            type = 'Software'
+        else:
+            type = 'Hardware'
+        
+        #grabs number value from priority option selected and applies it to output so you get a real number instead of some nicegui call
+        if priority == 1:
+            priority = '1'
+        elif priority == 2:
+            priority = '2'
+        elif priority == 3:
+            priority = '3'
+        elif priority == 4:
+            priority = '4'
+        elif priority == 5:
+            priority = '5'
 
         if (len(ticketTitle.value) > 0 and len(ticketDesc.value) > 0):
             cursor = db_tickets.cursor()
 
             cursor.execute("INSERT INTO Tickets (TicketNumber, Title, Description, Timestamp, Assignee, Status, User, Duedate, Issuetype, Priority) VALUES ('" + str(indexToUse) +
-                           "', '" + str(title)  + "', '" + str(desc) + "', '" + str(realTicketTimeStamp) + "', 'No Assignee', 'Open', '" + username + "', '" + str(type) + "', '" + str(ticketDueDate) + "', '" + priority + "')")
+                           "', '" + str(title)  + "', '" + str(desc) + "', '" + str(realTicketTimeStamp) + "', 'No Assignee', 'Open', '" + username + "', '" + str(realTicketDueDate) + "', '" + str(type) + "', '" + str(priority) + "')")
             db_tickets.commit()
             cursor.close()
 
@@ -424,8 +445,6 @@ def nonadmin_ticket_view_info():
         desc = str(ticketDesc.value).replace("'", "''")
         print("After cleanse: ", desc)
         ticketTimeStamp = datetime.datetime.now()
-        if ticketDueDate is None:
-            ticketDueDate = ticketTimeStamp + timedelta(days=3)
         realTicketTimeStamp = ticketTimeStamp.strftime(
             "%b %d %Y") + " at " + ticketTimeStamp.strftime("%H") + ":" + ticketTimeStamp.strftime("%M")
         print(realTicketTimeStamp)
@@ -749,8 +768,10 @@ def admin_ticket_view_info():
         ui.label("Update Status").style("font-size: 20px")
         selectedStatus = ui.select(options=arrayOfStatuses, value=arrayOfStatuses[0],
                                    on_change=lambda: print("status selected")).classes('w-max')
+        ui.label("Change Priority").style("font-size: 20px")
+        ticketPriority = ui.toggle({1: '1', 2: '2', 3: '3', 4: '4', 5: '5'})
         ticketTitle = ui.textarea(
-            "Update title.").classes('w-full')
+            "Update title").classes('w-full')
         ticketDesc = ui.textarea("Update description.").classes('w-full')
         ui.button("Submit", on_click=lambda: updateTicket(),
                   color="green", icon="done").style("margin-bottom: 20px")
@@ -768,16 +789,31 @@ def admin_ticket_view_info():
         desc = str(ticketDesc.value).replace("'", "''")
         print("After cleanse: ", desc)
 
+        print("Before cleanse: ", ticketPriority.value)
+        priority = str(ticketPriority.value).replace("'", "''")
+        print("After cleanse: ", priority)
+
         ticketTimeStamp = datetime.datetime.now()
-        if ticketDueDate is None:
-            ticketDueDate = ticketTimeStamp + timedelta(days=3)
         realTicketTimeStamp = ticketTimeStamp.strftime(
             "%b %d %Y") + " at " + ticketTimeStamp.strftime("%H") + ":" + ticketTimeStamp.strftime("%M")
+        
+                #grabs number value from priority option selected and applies it to output so you get a real number instead of some nicegui call
+        if priority == 1:
+            priority = '1'
+        elif priority == 2:
+            priority = '2'
+        elif priority == 3:
+            priority = '3'
+        elif priority == 4:
+            priority = '4'
+        elif priority == 5:
+            priority = '5'
+
         print(realTicketTimeStamp)
         if (len(ticketTitle.value) > 0 and len(ticketDesc.value) > 0):
             cursor = db_tickets.cursor()
             cursor.execute("UPDATE Tickets SET Title = '" + str(title) + "', Description = '" + str(desc) + "', Assignee = '" + str(selectedAssignee.value) +
-                           "', Status = '" + str(selectedStatus.value) + "', Timestamp = '" + str(realTicketTimeStamp) + "' WHERE TicketNumber = '" + str(ticketNumber) + "'")
+                           "', Status = '" + str(selectedStatus.value) + "', Timestamp = '" + str(realTicketTimeStamp) + "', Priority = '" + str(priority) + "' WHERE TicketNumber = '" + str(ticketNumber) + "'")
             db_tickets.commit()
             cursor.close()
 
@@ -791,7 +827,7 @@ def admin_ticket_view_info():
 
             print("Username is " + str(ticketUsername.at[0, "User"]))
             cursor.execute("INSERT INTO TicketHistory (HistoryID, TicketNumber, Username, Assignee, Description, Timestamp, Updater, Title) VALUES ('" + str(indexOfHistoryNumber.at[0, "MAX(HistoryID)"]) +
-                           "', '" + str(ticketNumber) + "', '" + str(ticketUsername.at[0, "User"]) + "', '" + str(ticketAssignee.at[0, "Assignee"]) + "', '" + str(ticketDueDate) + "', '" + str(desc) + "', '" + str(realTicketTimeStamp) + "', '" + str(username) + "', '" + str(title) + "')")
+                           "', '" + str(ticketNumber) + "', '" + str(ticketUsername.at[0, "User"]) + "', '" + str(ticketAssignee.at[0, "Assignee"]) + "', '" + str(desc) + "', '" + str(realTicketTimeStamp) + "', '" + str(username) + "', '" + str(title) + "')")
 
             db_history.commit()
             cursor.close()
