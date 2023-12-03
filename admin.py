@@ -151,7 +151,7 @@ def admin_ticket_view_list():
     ui.button("Go back", on_click=lambda: ui.open(admin_page), color="red",
               icon="arrow_back").tailwind.drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
     ui.button("Number of Tickets per User", on_click=lambda: ui.open(
-        admin_created_tickets_by_user), color="red", icon="arrow_forward")
+        admin_created_tickets_by_user), color="red", icon="arrow_forward").tailwind.drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
 
     global username
 
@@ -193,7 +193,7 @@ def admin_created_tickets_by_user():
             """
     ui.html(backgroundHtml)
     ui.button("Go back", on_click=lambda: ui.open(
-        admin_ticket_view_list), color="red", icon="arrow_back")
+        admin_ticket_view_list), color="red", icon="arrow_back").tailwind.drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
 
     global username
 
@@ -240,6 +240,13 @@ def admin_ticket_view_info():
                 background-position: 0% 50%;
             }}
         }}
+        #extend-border {{
+            background-color: #dc2626;
+            width: 3px;
+            height: 50px;
+            padding: 0px;
+            margin: 0px;
+            }} 
         </style>
             """
     ui.html(backgroundHtml)
@@ -296,16 +303,26 @@ def admin_ticket_view_info():
     ui.button("Go back", on_click=lambda: ui.open(
         admin_ticket_view_list), color="red", icon="arrow_back").tailwind.drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
 
-    with ui.row().classes('border-2 border-red-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
+    with ui.row().classes('border-2 border-red-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; margin: 20px; background-color: white'):
+        ui.html(f"""<div id='extend-border'></div>""")
         ui.label("Ticket #" + str(ticketNumber))
+        ui.html(f"""<div id='extend-border'></div>""")
         ui.label("Ticket Title: " + ticketTitle.at[0, "Title"])
+        ui.html(f"""<div id='extend-border'></div>""")
         ui.label("Last Updated: " + ticketTimestamp.at[0, "Timestamp"])
+        ui.html(f"""<div id='extend-border'></div>""")
         ui.label("Ticket User: " + ticketUsername.at[0, "User"])
+        ui.html(f"""<div id='extend-border'></div>""")
         ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"])
+        ui.html(f"""<div id='extend-border'></div>""")
         ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
+        ui.html(f"""<div id='extend-border'></div>""")
         ui.label("Ticket Due Date: " + str(ticketDueDate.at[0, "Duedate"]))
+        ui.html(f"""<div id='extend-border'></div>""")
         ui.label("Issue Type: " + str(ticketIssueType.at[0, "Issuetype"]))
+        ui.html(f"""<div id='extend-border'></div>""")
         ui.label("Ticket Priority: " + str(ticketPriority.at[0, "Priority"]))
+        ui.html(f"""<div id='extend-border'></div>""")
 
     with ui.column().classes('border-2 border-red-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
         ui.label("Current Ticket Description: ").tailwind.font_weight('bold')
