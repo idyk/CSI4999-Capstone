@@ -7,8 +7,11 @@ Uses pandas for database reading from .db files.
 Modularized for ease of reading and expandability.
 
 Install pandas and nicegui:
+
 pip install nicegui
+
 pip install pandas
+
 
 
 
