@@ -181,6 +181,8 @@ def nonadmin_ticket_create():
             ui.label("Create your ticket, " + str(username) + "!")
             ticketTitle = ui.textarea(
                 "Enter your issue's title here.").classes('w-10/12 border-2 border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white')
+            ticketType = ui.toggle({1: 'Software', 2:'Hardware'})
+            ticketPriority = ui.toggle([1, 2, 3, 4, 5], value=1)
             ticketDesc = ui.textarea(
                 "Enter your issue's description here.").classes('w-10/12 border-2 border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white')
             ui.button("Submit", on_click=lambda: submitTicket(
@@ -197,20 +199,31 @@ def nonadmin_ticket_create():
         title = str(ticketTitle.value).replace("'", "''")
         print("After cleanse: ", title)
 
+        print("Before cleanse: ", ticketType.value)
+        type = str(ticketType.value).replace("'", "''")
+        print("After cleanse: ", type)
+
         print("Before cleanse: ", ticketDesc.value)
         desc = str(ticketDesc.value).replace("'", "''")
         print("After cleanse: ", desc)
+
+        priority = ticketPriority
+        print("priority level: ", priority)
 
         ticketTimeStamp = datetime.datetime.now()
         realTicketTimeStamp = ticketTimeStamp.strftime(
             "%b %d %Y") + " at " + ticketTimeStamp.strftime("%H") + ":" + ticketTimeStamp.strftime("%M")
         print(realTicketTimeStamp)
 
+        if ticketDueDate is None:
+            ticketDueDate = realTicketTimeStamp + timedelta(days=3)
+        print(ticketDueDate)
+
         if (len(ticketTitle.value) > 0 and len(ticketDesc.value) > 0):
             cursor = db_tickets.cursor()
 
-            cursor.execute("INSERT INTO Tickets (TicketNumber, Title, Description, Timestamp, Assignee, Status, User) VALUES ('" + str(indexToUse) +
-                           "', '" + str(title) + "', '" + str(desc) + "', '" + str(realTicketTimeStamp) + "', 'No Assignee', 'Open', '" + username + "')")
+            cursor.execute("INSERT INTO Tickets (TicketNumber, Title, Description, Timestamp, Assignee, Status, User, Duedate, Issuetype, Priority) VALUES ('" + str(indexToUse) +
+                           "', '" + str(title)  + "', '" + str(desc) + "', '" + str(realTicketTimeStamp) + "', 'No Assignee', 'Open', '" + username + "', '" + str(type) + "', '" + str(ticketDueDate) + "', '" + priority + "')")
             db_tickets.commit()
             cursor.close()
 
@@ -338,9 +351,9 @@ def nonadmin_ticket_view_info():
     ticketDueDate = pd.read_sql_query(
         "SELECT Duedate from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
     ticketIssueType = pd.read_sql_query(
-        "SELECT IssueType from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
-    ticketReporter = pd.read_sql_query(
-        "SELECT Reporter from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+        "SELECT Issuetype from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+    ticketPriority = pd.read_sql_query(
+        "SELECT Priority from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
     ticketHistoryDesc = pd.read_sql_query(
         "SELECT Description FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
     ticketHistoryTimestamp = pd.read_sql_query(
@@ -364,7 +377,7 @@ def nonadmin_ticket_view_info():
         ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
         ui.label("Ticket Due Date: " + str(ticketDueDate.at[0, "Duedate"]))
         ui.label("Issue Type: " + str(ticketIssueType.at[0, "Issuetype"]))
-        ui.label("Ticket Reporter: " + str(ticketReporter.at[0, "Reporter"]))
+        ui.label("Ticket Priority: " + str(ticketPriority.at[0, "Priority"]))
 
     with ui.column().classes('border-2 border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
         ui.label("Current Ticket Description: ")
@@ -664,8 +677,8 @@ def admin_ticket_view_info():
     ticketIssueType = pd.read_sql_query(
         "SELECT IssueType from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
     
-    ticketReporter = pd.read_sql_query(
-        "SELECT Reporter from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
+    ticketPriority = pd.read_sql_query(
+        "SELECT Priority from Tickets WHERE TicketNumber = '" + str(ticketNumber) + "'", db_tickets)
     
     ticketHistoryDesc = pd.read_sql_query(
         "SELECT Description FROM TicketHistory WHERE TicketNumber = '" + str(ticketNumber) + "'", db_history)
@@ -693,7 +706,7 @@ def admin_ticket_view_info():
         ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
         ui.label("Ticket Due Date: " + str(ticketDueDate.at[0, "Duedate"]))
         ui.label("Issue Type: " + str(ticketIssueType.at[0, "Issuetype"]))
-        ui.label("Ticket Reporter: " + str(ticketReporter.at[0, "Reporter"]))
+        ui.label("Ticket Priority: " + str(ticketPriority.at[0, "Priority"]))
 
     with ui.column().classes('border-2 border-red-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
         ui.label("Current Ticket Description: ")
