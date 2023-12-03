@@ -60,7 +60,7 @@ def login_page():
             with ui.column().classes('w-6/12 border-4 border-outset border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
                 username = ui.input(label="Username").classes('border-2 border-solid border-indigo-600 rounded-lg ').style("width: 30%")
                 password = ui.input(label="Password", password=True,
-                                    ).classes('border-2 border-inset border-grey .p12 rounded-lg ').style("width: 30%")
+                                    ).classes('border-2 border-inset border-indigo-600 .p12 rounded-lg ').style("width: 30%")
 
         ui.button("Sign in", on_click=lambda: attemptLogin(
         ), color="green", icon="how_to_reg").classes("py-2 px-4 rounded-full ").tailwind.drop_shadow('lg').animation('bounce').box_shadow('inner').box_shadow_color('black').gradient_color_stops('from-10%').justify_content('center')
@@ -286,7 +286,7 @@ def nonadmin_ticket_view_list():
 
     global queriedTicketNumber
     with ui.row().classes('w-full justify-center border-style-solid border-color-indigo border-width-medium'):
-        with ui.column().classes('w-full items-center bordr-style-solid border-color-indigo border-width-medium'):
+        with ui.column().classes('w-full items-center border-style-solid border-color-indigo border-width-medium'):
             ui.label(
                 "Select the ticket from the dropdown to see more information on it, or to update it.").style(
                 "font-size: 20px; font-weight: bold")
@@ -351,12 +351,13 @@ def nonadmin_ticket_view_info():
         nonadmin_ticket_view_list), color="red", icon="arrow_back").tailwind.drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
 
     with ui.row().classes('border-2 border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
-        ui.label("Ticket #" + str(ticketNumber)).tailwind.font_weight('bold')
-        ui.label("Ticket Title: " + ticketTitle.at[0, "Title"])
-        ui.label("Last Updated: " + ticketTimestamp.at[0, "Timestamp"])
-        ui.label("Ticket User: " + ticketUsername.at[0, "User"])
-        ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"])
-        ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
+        ui.label("Ticket #" + str(ticketNumber) + "     ||").style('font-weight:bold')
+
+        ui.label("Ticket Title: " + ticketTitle.at[0, "Title"] + "     ||")
+        ui.label("Last Updated: " + ticketTimestamp.at[0, "Timestamp"] +"     ||")
+        ui.label("Ticket User: " + ticketUsername.at[0, "User"] +"     ||")
+        ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"] + "     ||")
+        ui.label("Ticket Status: " + ticketStatus.at[0, "Status"] + "     ||")
 
     with ui.column().classes('border-2 border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
         ui.label("Current Ticket Description: ").tailwind.font_weight('extrabold')
@@ -591,7 +592,7 @@ def admin_ticket_view_list():
         with ui.column().classes('w-full items-centerborder-width-thick border-color-red'):
             ui.label(
                 "Select the ticket from the dropdown to see more information on it, or to update it.").style(
-                "font-size: 19px; font-weight: bold")
+                "font-size: 19px; font-weight: bold; text-align:center")
             queriedTicketNumber = ui.select(options=arrayOfTicketNumbers,
                                             on_change=lambda: ui.open(admin_ticket_view_info))
 
@@ -666,12 +667,12 @@ def admin_ticket_view_info():
         admin_ticket_view_list), color="red", icon="arrow_back").tailwind.drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
 
     with ui.row().classes('border-2 border-red-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
-        ui.label("Ticket #" + str(ticketNumber)).tailwind.font_weight('bold')
-        ui.label("Ticket Title: " + ticketTitle.at[0, "Title"])
-        ui.label("Last Updated: " + ticketTimestamp.at[0, "Timestamp"])
-        ui.label("Ticket User: " + ticketUsername.at[0, "User"])
-        ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"])
-        ui.label("Ticket Status: " + ticketStatus.at[0, "Status"])
+        ui.label("Ticket #" + str(ticketNumber) + "     ||").style('font-weight:bold')
+        ui.label("Ticket Title: " + ticketTitle.at[0, "Title"] + "     ||")
+        ui.label("Last Updated: " + ticketTimestamp.at[0, "Timestamp"] + "     ||")
+        ui.label("Ticket User: " + ticketUsername.at[0, "User"]+ "     ||")
+        ui.label("Ticket Assignee: " + ticketAssignee.at[0, "Assignee"] + "     ||")
+        ui.label("Ticket Status: " + ticketStatus.at[0, "Status"]+ "     ||")
 
     with ui.column().classes('border-2 border-red-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white'):
         ui.label("Current Ticket Description: ").tailwind.font_weight('bold')
@@ -693,9 +694,9 @@ def admin_ticket_view_info():
                 with ui.column().classes('w-max items-center border-2 border-red-600 justify-center items-center .p-12 rounded-lg').style("background-color: white;"):
                     for i in range(0, len(ticketHistoryDesc), 1):
                         ui.label("Ticket Description at " +
-                                 ticketHistoryTimestamp.at[i, "Timestamp"] + " by " + ticketHistoryUpdater.at[i, "Updater"] + " with title " + ticketHistoryTitle.at[i, "Title"]).style('text-align: center; padding: 20px')
+                                 ticketHistoryTimestamp.at[i, "Timestamp"] + " by " + ticketHistoryUpdater.at[i, "Updater"] + " with title " + ticketHistoryTitle.at[i, "Title"]).style('text-align: center; padding: 20px').tailwind.font_weight('bold')
                         ui.label(ticketHistoryDesc.at[i, "Description"]).style(
-                            'text-align: center; padding: 20px').tailwind.font_weight('bold')
+                            'text-align: center; padding: 20px')
 
     arrayOfAssignees = []
     for i in range(0, len(elevatedUserGet), 1):
