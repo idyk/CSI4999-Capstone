@@ -105,8 +105,11 @@ def nonadmin_ticket_create():
             ui.label("Issue Type").style("font-size: 20px")
             ticketType = ui.toggle({1: 'Software', 2: 'Hardware'})
             ui.label("Priority").style("font-size: 20px")
+            ui.label("1 being the lowest and 5 being the highest").style("font-size: 20px")
             ticketPriority = ui.toggle(
                 {1: '1', 2: '2', 3: '3', 4: '4', 5: '5'})
+            ui.label("Please Enter Due Date using the Calendar Below").style("font-size: 20px")
+            ticketDueDate = ui.date(value=datetime.datetime.now(), mask='MM-DD-YYYY',on_change=lambda e: ticketDueDate.set_text(e.value))
             ticketDesc = ui.textarea(
                 "Enter your issue's description here.").classes('w-10/12 border-2 border-outset border-indigo-600 justify-center items-center .p-12 rounded-lg').style('text-align: center; padding: 20px; margin: 20px; background-color: white')
             ui.button("Submit", on_click=lambda: submitTicket(
@@ -135,15 +138,19 @@ def nonadmin_ticket_create():
         priority = str(ticketPriority.value).replace("'", "''")
         print("After cleanse: ", priority)
 
+        print("Before cleanse: ", ticketDueDate.value)
+        duedate = str(ticketDueDate.value).replace("'", "''")
+        print("After cleanse: ", duedate)
+
         ticketTimeStamp = datetime.datetime.now()
         realTicketTimeStamp = ticketTimeStamp.strftime(
             "%b %d %Y") + " at " + ticketTimeStamp.strftime("%H") + ":" + ticketTimeStamp.strftime("%M")
         print(realTicketTimeStamp)
 
-        ticketDueDate = ticketTimeStamp + datetime.timedelta(days=3)
-        realTicketDueDate = ticketDueDate.strftime(
-            "%b %d %Y") + " at " + ticketTimeStamp.strftime("%H") + ":" + ticketTimeStamp.strftime("%M")
-        print(realTicketDueDate)
+        #ticketDueDate = ticketTimeStamp + datetime.timedelta(days=3)
+        #realTicketDueDate = ticketDueDate.strftime(
+        #    "%b %d %Y") + " at " + ticketTimeStamp.strftime("%H") + ":" + ticketTimeStamp.strftime("%M")
+        #print(realTicketDueDate)
 
         # checks which option was chosen by the toggle and changes the number to its corresponding words
         if type == 1:
@@ -167,7 +174,7 @@ def nonadmin_ticket_create():
             cursor = db_tickets.cursor()
 
             cursor.execute("INSERT INTO Tickets (TicketNumber, Title, Description, Timestamp, Assignee, Status, User, Duedate, Issuetype, Priority) VALUES ('" + str(indexToUse) +
-                           "', '" + str(title) + "', '" + str(desc) + "', '" + str(realTicketTimeStamp) + "', 'No Assignee', 'Open', '" + username + "', '" + str(realTicketDueDate) + "', '" + str(type) + "', '" + str(priority) + "')")
+                           "', '" + str(title) + "', '" + str(desc) + "', '" + str(realTicketTimeStamp) + "', 'No Assignee', 'Open', '" + username + "', '" + str(duedate) + "', '" + str(type) + "', '" + str(priority) + "')")
             db_tickets.commit()
             cursor.close()
 
