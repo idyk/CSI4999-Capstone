@@ -372,8 +372,10 @@ def admin_ticket_view_info():
                                    on_change=lambda: print("status selected")).classes('w-max')
         ui.label("Change Priority").style("font-size: 20px")
         ticketPriority = ui.toggle({1: '1', 2: '2', 3: '3', 4: '4', 5: '5'})
-        ticketTitle = ui.textarea(
-            "Update title").classes('w-full')
+        ui.label("Change Due Date").style("font-size: 20px")
+        ticketDueDate = ui.date(value=datetime.datetime.now(), mask='MM-DD-YYYY',on_change=lambda e: result.set_text(e.value))
+        result = ui.label()
+        ticketTitle = ui.textarea("Update title").classes('w-full')
         ticketDesc = ui.textarea("Update description.").classes('w-full')
         ui.button("Submit", on_click=lambda: updateTicket(),
                   color="green", icon="done").style("margin-bottom: 20px").tailwind.animation('bounce').drop_shadow('lg').box_shadow('inner').box_shadow_color('black')
@@ -395,6 +397,10 @@ def admin_ticket_view_info():
         priority = str(ticketPriority.value).replace("'", "''")
         print("After cleanse: ", priority)
 
+        print("Before cleanse: ", ticketDueDate.value)
+        duedate = str(ticketDueDate.value).replace("'", "''")
+        print("After cleanse: ", duedate)
+
         ticketTimeStamp = datetime.datetime.now()
         realTicketTimeStamp = ticketTimeStamp.strftime(
             "%b %d %Y") + " at " + ticketTimeStamp.strftime("%H") + ":" + ticketTimeStamp.strftime("%M")
@@ -415,7 +421,7 @@ def admin_ticket_view_info():
         if (len(ticketTitle.value) > 0 and len(ticketDesc.value) > 0):
             cursor = db_tickets.cursor()
             cursor.execute("UPDATE Tickets SET Title = '" + str(title) + "', Description = '" + str(desc) + "', Assignee = '" + str(selectedAssignee.value) +
-                           "', Status = '" + str(selectedStatus.value) + "', Timestamp = '" + str(realTicketTimeStamp) + "', Priority = '" + str(priority) + "' WHERE TicketNumber = '" + str(ticketNumber) + "'")
+                           "', Status = '" + str(selectedStatus.value) + "', Timestamp = '" + str(realTicketTimeStamp) + "', Priority = '" + str(priority) + "', DueDate = '" + str(duedate) +"' WHERE TicketNumber = '" + str(ticketNumber) + "'")
             db_tickets.commit()
             cursor.close()
 
